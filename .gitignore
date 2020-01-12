@@ -1,0 +1,8 @@
+# Configuration Eclipse
+.cproject
+.project
+.settings/
+
+# Repertoires Debug et Release
+Debug/
+Release/

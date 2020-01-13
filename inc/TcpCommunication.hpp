@@ -26,10 +26,85 @@
 #define TCP_SERVER_IP_ADDRESS	"127.0.0.1"
 #define TCP_SERVER_PORT			54000
 #define BUFFER_SIZE				4096
+#define MAX_PATH_POINTS			10
+#define MSG_ID_PATH				0x01
+#define MSG_ID_PATH_CORRECTION	0x02
+#define MSG_ID_WORKSHOP_ORDER	0x03
+#define MSG_ID_STOP				0x04
+#define MSG_ID_WORKSHOP_REPORT	0x05
+#define MSG_ID_BIT_REPORT		0x06
+#define MSG_ID_ERROR			0x07
 
 
 
 using namespace std;
+
+
+
+struct SMsgHeader
+{
+	uint32_t id;
+	uint32_t size;
+};
+
+
+
+struct SPathMsgBody
+{
+	SMsgHeader 	hd;
+	uint32_t	pointsNb;
+	int32_t		xyPointsArray[MAX_PATH_POINTS];
+};
+
+
+
+struct SPathCorrectionMsgBody
+{
+	SMsgHeader 	hd;
+	uint32_t	lastIdValid;
+	uint32_t	pointsNb;
+	int32_t		xyCorrectionPointsArray[MAX_PATH_POINTS];
+};
+
+
+
+struct SWorkShopOrderMsgBody
+{
+	SMsgHeader 	hd;
+	// ...
+};
+
+
+
+struct SStopMsgBody
+{
+	SMsgHeader 	hd;
+	// ...
+};
+
+
+
+struct SWorkShopReportMsgBody
+{
+	SMsgHeader 	hd;
+	// ...
+};
+
+
+
+struct SBitReportMsgBody
+{
+	SMsgHeader 	hd;
+	// ...
+};
+
+
+
+struct SErrorMsgBody
+{
+	SMsgHeader 	hd;
+	// ...
+};
 
 
 

@@ -32,6 +32,7 @@ namespace SRV
 		    socklen_t 	m_serverSocketAddrSize;
 		    socklen_t 	m_clientSocketAddrSize;
 		    string 		m_serverIpAddress;
+		    int 		m_clientRequestedMsgId;
 		    int 		m_serverPort;
 			int 		m_receivedBytesNb;
 			int 		m_serverSocket;

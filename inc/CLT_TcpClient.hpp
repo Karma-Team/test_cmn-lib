@@ -34,7 +34,8 @@ namespace CLT
 		    sockaddr_in m_serverSocketAddr;
 		    socklen_t	m_serverSocketAddrSize;
 		    string 		m_serverIpAddress;
-		    string 		m_userInput;
+		    string 		m_clientInput;
+			int 		m_clientRequestedMsgId;
 		    int 		m_clientSocket;
 		    int 		m_serverPort;
 			int 		m_receivedBytesNb;

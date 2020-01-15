@@ -15,7 +15,8 @@ CLT::CTcpClient::CTcpClient()
 {
     m_serverSocketAddrSize	= 0;
     m_serverIpAddress		= TCP_SERVER_IP_ADDRESS;
-    m_userInput				= "";
+    m_clientInput			= "";
+    m_clientRequestedMsgId	= 0;
     m_serverPort	 		= TCP_SERVER_PORT;
     m_receivedBytesNb 		= 0;
 	m_clientSocket			= -1;
@@ -69,6 +70,7 @@ int CLT::CTcpClient::initTcpClient()
 
 int CLT::CTcpClient::startTcpClient()
 {
+	int l_MsgIdValid;
 	cout << "Start the TCP client" << endl;
 
 	if(m_clientSocket != -1)
@@ -76,28 +78,69 @@ int CLT::CTcpClient::startTcpClient()
 	    //	While loop: send and receive message back from server
 			do
 			{
-				// Enter lines of text
-					cout << "> ";
-					getline(cin, m_userInput);
+				// Enter msg id
+					cout << "> Client requested msg id : ";
+					getline(cin, m_clientInput);
+					m_clientRequestedMsgId = strtoul(m_clientInput.c_str(), NULL, 16);
+					cout << "> " << hex << m_clientRequestedMsgId;
+					l_MsgIdValid = 1;
+					switch(m_clientRequestedMsgId)
+					{
+						case MSG_ID_PATH:
+							cout << " = MSG_ID_PATH \r\n";
+							break;
 
-				// Send data to server
-					if(send(m_clientSocket, m_userInput.c_str(), m_userInput.size() + 1, 0) == -1)
-					{
-						cout << "Can't send data to server! Please try again \r\n";
-						continue;
+						case MSG_ID_PATH_CORRECTION:
+							cout << " = MSG_ID_PATH_CORRECTION \r\n";
+							break;
+
+						case MSG_ID_WORKSHOP_ORDER:
+							cout << " = MSG_ID_WORKSHOP_ORDER \r\n";
+							break;
+
+						case MSG_ID_STOP:
+							cout << " = MSG_ID_STOP \r\n";
+							break;
+
+						case MSG_ID_WORKSHOP_REPORT:
+							cout << " = MSG_ID_WORKSHOP_REPORT \r\n";
+							break;
+
+						case MSG_ID_BIT_REPORT:
+							cout << " = MSG_ID_BIT_REPORT \r\n";
+							break;
+
+						case MSG_ID_ERROR:
+							cout << " = MSG_ID_ERROR \r\n";
+							break;
+
+						default:
+							cout << " -> UNKNOWN MSG ID \r\n";
+							l_MsgIdValid = 0;
 					}
 
-				// Wait for response from server and then display it
-					memset(m_buffer, 0, 4096);
-					m_receivedBytesNb = recv(m_clientSocket, m_buffer, 4096, 0);
-					if (m_receivedBytesNb == -1)
-					{
-						cerr << "Error in recv()!" << endl;
-					}
-					else
-					{
-						cout << "SERVER > " << string(m_buffer, m_receivedBytesNb) << "\r\n";
-					}
+				if(l_MsgIdValid != 0)
+				{
+					// Send data to server
+						if(send(m_clientSocket, &m_clientRequestedMsgId, sizeof(m_clientRequestedMsgId), 0) == -1)
+						{
+							cout << "Can't send data to server! Please try again \r\n";
+							continue;
+						}
+						cout << "> Request sent to server \r\n";
+
+					// Wait for response from server and then display it
+						memset(m_buffer, 0, 4096);
+						m_receivedBytesNb = recv(m_clientSocket, m_buffer, 4096, 0);
+						if (m_receivedBytesNb == -1)
+						{
+							cerr << "Error in recv()!" << endl;
+						}
+						else
+						{
+							cout << "SERVER > " << string(m_buffer, m_receivedBytesNb) << "\r\n";
+						}
+				}
 			} while(true);
 
 	    //	Close the client socket

@@ -17,6 +17,7 @@ SRV::CTcpServer::CTcpServer()
     m_clientSocketAddrSize	= 0;
     m_serverIpAddress		= TCP_SERVER_IP_ADDRESS;
     m_serverPort			= TCP_SERVER_PORT;
+    m_clientRequestedMsgId 	= 0;
     m_receivedBytesNb 		= 0;
 	m_serverSocket			= -1;
 	m_clientSocket			= -1;
@@ -109,7 +110,7 @@ int SRV::CTcpServer::startTcpServer()
 					memset(m_buffer, 0, BUFFER_SIZE);
 
 				// Wait for the client to send data
-					m_receivedBytesNb = recv(m_clientSocket, m_buffer, BUFFER_SIZE, 0);
+					m_receivedBytesNb = recv(m_clientSocket, &m_clientRequestedMsgId, sizeof(m_clientRequestedMsgId), 0);
 					if(m_receivedBytesNb == -1)
 					{
 						cerr << "Error in recv()! Quitting" << endl;
@@ -120,7 +121,7 @@ int SRV::CTcpServer::startTcpServer()
 						cout << "Client disconnected! Quitting " << endl;
 						break;
 					}
-					cout << "> " << string(m_buffer, 0, m_receivedBytesNb) << endl;
+					cout << "> Request msg id received from client : " << hex << m_clientRequestedMsgId << endl;
 
 				// Echo message back to client
 					if(send(m_clientSocket, m_buffer, m_receivedBytesNb + 1, 0) == -1)

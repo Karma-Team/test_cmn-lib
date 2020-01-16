@@ -1,5 +1,5 @@
 /*
- * CLT_TcpClient.hpp
+ * COM_TcpClient.hpp
  *
  *  Created on: 12 janv. 2020
  *      Author: ahu
@@ -7,20 +7,16 @@
 
 
 
-#ifndef INC_CLT_TCPCLIENT_HPP_
-#define INC_CLT_TCPCLIENT_HPP_
+#ifndef INC_COMTCPCLIENT_HPP_
+#define INC_COMTCPCLIENT_HPP_
 
 
 
-#include "TcpCommunication.hpp"
+#include "COM_TcpCommon.hpp"
 
 
 
-using namespace std;
-
-
-
-namespace CLT
+namespace COM
 {
 	class CTcpClient
 	{
@@ -45,4 +41,4 @@ namespace CLT
 
 
 
-#endif /* INC_CLT_TCPCLIENT_HPP_ */
+#endif /* INC_COMTCPCLIENT_HPP_ */

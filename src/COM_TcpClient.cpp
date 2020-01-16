@@ -1,5 +1,5 @@
 /*
- * CLT_TcpClient.cpp
+ * COM_TcpClient.cpp
  *
  *  Created on: 12 janv. 2020
  *      Author: ahu
@@ -7,11 +7,11 @@
 
 
 
-#include <CLT_TcpClient.hpp>
+#include <COM_TcpClient.hpp>
 
 
 
-CLT::CTcpClient::CTcpClient()
+COM::CTcpClient::CTcpClient()
 {
     m_serverSocketAddrSize	= 0;
     m_serverIpAddress		= TCP_SERVER_IP_ADDRESS;
@@ -25,7 +25,7 @@ CLT::CTcpClient::CTcpClient()
 
 
 
-CLT::CTcpClient::~CTcpClient()
+COM::CTcpClient::~CTcpClient()
 {
     // Close the client socket
     	close(m_clientSocket);
@@ -35,7 +35,7 @@ CLT::CTcpClient::~CTcpClient()
 
 
 
-int CLT::CTcpClient::initTcpClient()
+int COM::CTcpClient::initTcpClient()
 {
 	cout << "Initialize the TCP client" << endl;
 
@@ -68,7 +68,7 @@ int CLT::CTcpClient::initTcpClient()
 
 
 
-int CLT::CTcpClient::startTcpClient()
+int COM::CTcpClient::startTcpClient()
 {
 	int l_MsgIdValid;
 	cout << "Start the TCP client" << endl;

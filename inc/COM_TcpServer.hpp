@@ -1,5 +1,5 @@
 /*
- * SRV_TcpServer.hpp
+ * COM_TcpServer.hpp
  *
  *  Created on: 12 janv. 2020
  *      Author: ahu
@@ -7,16 +7,16 @@
 
 
 
-#ifndef INC_SRV_TCPSERVER_HPP_
-#define INC_SRV_TCPSERVER_HPP_
+#ifndef INC_COMTCPSERVER_HPP_
+#define INC_COMTCPSERVER_HPP_
 
 
 
-#include "TcpCommunication.hpp"
+#include "COM_TcpCommon.hpp"
 
 
 
-namespace SRV
+namespace COM
 {
 	class CTcpServer
 	{
@@ -45,4 +45,4 @@ namespace SRV
 
 
 
-#endif /* INC_SRV_TCPSERVER_HPP_ */
+#endif /* INC_COMTCPSERVER_HPP_ */

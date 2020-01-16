@@ -1,5 +1,5 @@
 /*
- * TcpCommunication.hpp
+ * COM_TcpCommon.hpp
  *
  *  Created on: 13 janv. 2020
  *      Author: ahu
@@ -7,8 +7,8 @@
 
 
 
-#ifndef INC_TCPCOMMUNICATION_HPP_
-#define INC_TCPCOMMUNICATION_HPP_
+#ifndef INC_COMTCPCOMMON_HPP_
+#define INC_COMTCPCOMMON_HPP_
 
 
 
@@ -114,4 +114,4 @@ struct SErrorMsgBody
 
 
 
-#endif /* INC_TCPCOMMUNICATION_HPP_ */
+#endif /* INC_COMTCPCOMMON_HPP_ */

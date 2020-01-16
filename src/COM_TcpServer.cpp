@@ -1,5 +1,5 @@
 /*
- * SRV_TcpServer.cpp
+ * COM_TcpServer.cpp
  *
  *  Created on: 12 janv. 2020
  *      Author: ahu
@@ -7,11 +7,11 @@
 
 
 
-#include <SRV_TcpServer.hpp>
+#include <COM_TcpServer.hpp>
 
 
 
-SRV::CTcpServer::CTcpServer()
+COM::CTcpServer::CTcpServer()
 {
     m_serverSocketAddrSize	= 0;
     m_clientSocketAddrSize	= 0;
@@ -28,7 +28,7 @@ SRV::CTcpServer::CTcpServer()
 
 
 
-SRV::CTcpServer::~CTcpServer()
+COM::CTcpServer::~CTcpServer()
 {
     // Close the server socket
     	close(m_serverSocket);
@@ -37,7 +37,7 @@ SRV::CTcpServer::~CTcpServer()
 
 
 
-int SRV::CTcpServer::initTcpServer()
+int COM::CTcpServer::initTcpServer()
 {
 	cout << "Initialize the TCP server" << endl;
 
@@ -80,7 +80,7 @@ int SRV::CTcpServer::initTcpServer()
 
 
 
-int SRV::CTcpServer::startTcpServer()
+int COM::CTcpServer::startTcpServer()
 {
 	cout << "Start the TCP server" << endl;
 

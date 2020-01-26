@@ -1,9 +1,6 @@
-/*
- * COM_TcpClient.cpp
- *
- *  Created on: 12 janv. 2020
- *      Author: ahu
- */
+/**
+ * "COM_TcpClient.cpp"
+ **/
 
 
 
@@ -13,14 +10,18 @@
 
 COM::CTcpClient::CTcpClient()
 {
-    m_serverSocketAddrSize	= 0;
-    m_serverIpAddress		= TCP_SERVER_IP_ADDRESS;
-    m_clientInput			= "";
-    m_clientRequestedMsgId	= 0;
-    m_serverPort	 		= TCP_SERVER_PORT;
-    m_receivedBytesNb 		= 0;
-	m_clientSocket			= -1;
-    strcpy(m_buffer, 		"");
+    m_serverIpAddress 				= TCP_SERVER_IP_ADDRESS;
+	m_clientSocket					= -1;
+    m_serverSocketPort				= TCP_SERVER_PORT;
+}
+
+
+
+COM::CTcpClient::CTcpClient(int p_serverSocketPort, string p_serverSocketIpAddr)
+{
+	m_serverIpAddress				= p_serverSocketIpAddr;
+	m_clientSocket					= -1;
+	m_serverSocketPort				= p_serverSocketPort;
 }
 
 
@@ -29,37 +30,38 @@ COM::CTcpClient::~CTcpClient()
 {
     // Close the client socket
     	close(m_clientSocket);
-		cout << "TCP client socket closed" << endl;
+		cout << "> TCP client socket closed" << endl;
 }
-
 
 
 
 int COM::CTcpClient::initTcpClient()
 {
-	cout << "Initialize the TCP client" << endl;
+	cout << "> Initialize the TCP client" << endl;
+
+	socklen_t 	l_serverSocketAddrSize;
 
     // Create the client socket
 		m_clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if (m_clientSocket == -1)
 		{
-			cerr << "Can't create the client socket! Quitting" << endl;
+			cerr << "> Can't create the client socket! Quitting" << endl;
 			return 1;
 		}
 
 	// Connect the client socket to the server one
 		m_serverSocketAddr.sin_family 	= AF_INET;
-		m_serverSocketAddr.sin_port 	= htons(m_serverPort);
+		m_serverSocketAddr.sin_port 	= htons(m_serverSocketPort);
 		if(inet_pton(AF_INET, m_serverIpAddress.c_str(), &m_serverSocketAddr.sin_addr) != 1)
 		{
-			cerr << "Can't convert the Internet address! Quitting" << endl;
+			cerr << "> Can't convert the Internet address! Quitting" << endl;
 			return -1;
 		}
 
-		m_serverSocketAddrSize = sizeof(m_serverSocketAddr);
-		if(connect(m_clientSocket, (sockaddr*)&m_serverSocketAddr, m_serverSocketAddrSize) == -1)
+		l_serverSocketAddrSize = sizeof(m_serverSocketAddr);
+		if(connect(m_clientSocket, (sockaddr*)&m_serverSocketAddr, l_serverSocketAddrSize) == -1)
 		{
-			cerr << "Can't connect the client socket to the server one! Quitting" << endl;
+			cerr << "> Can't connect the client socket to the server one! Quitting" << endl;
 			return -1;
 		}
 
@@ -68,89 +70,67 @@ int COM::CTcpClient::initTcpClient()
 
 
 
-int COM::CTcpClient::startTcpClient()
+int COM::CTcpClient::requestdMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
 {
-	int l_MsgIdValid;
-	cout << "Start the TCP client" << endl;
+	uint32_t 	l_requestedMsgBufferBytesSize;
+	int			l_receivedMsgBufferBytesSize;
 
-	if(m_clientSocket != -1)
-	{
-	    //	While loop: send and receive message back from server
-			do
-			{
-				// Enter msg id
-					cout << "> Client requested msg id : ";
-					getline(cin, m_clientInput);
-					m_clientRequestedMsgId = strtoul(m_clientInput.c_str(), NULL, 16);
-					cout << "> " << hex << m_clientRequestedMsgId;
-					l_MsgIdValid = 1;
-					switch(m_clientRequestedMsgId)
-					{
-						case MSG_ID_PATH:
-							cout << " = MSG_ID_PATH \r\n";
-							break;
+	// Send the requested message ID to TCP server
+		if(send(m_clientSocket, &p_requestedMsgId, sizeof(uint32_t), 0) == -1)
+		{
+			cout << "> Can't send requested message ID to server! Please try again\n";
+			return -1;
+		}
+		cout << "> Requested message ID sent to server\n";
 
-						case MSG_ID_PATH_CORRECTION:
-							cout << " = MSG_ID_PATH_CORRECTION \r\n";
-							break;
+	// Wait for the TCP server response
+		switch(p_requestedMsgId)
+		{
+			case MSG_ID_PATH:
+				cout << "> Wait for response from server : MSG_ID_PATH\n";
+				l_requestedMsgBufferBytesSize = sizeof(SPathMsgBody);
+				break;
 
-						case MSG_ID_WORKSHOP_ORDER:
-							cout << " = MSG_ID_WORKSHOP_ORDER \r\n";
-							break;
+			case MSG_ID_PATH_CORRECTION:
+				cout << "> Wait for response from server : MSG_ID_PATH_CORRECTION\n";
+				l_requestedMsgBufferBytesSize = sizeof(SPathCorrectionMsgBody);
+				break;
 
-						case MSG_ID_STOP:
-							cout << " = MSG_ID_STOP \r\n";
-							break;
+			case MSG_ID_WORKSHOP_ORDER:
+				cout << "> Wait for response from server : MSG_ID_WORKSHOP_ORDER\n";
+				l_requestedMsgBufferBytesSize = sizeof(SWorkShopOrderMsgBody);
+				break;
 
-						case MSG_ID_WORKSHOP_REPORT:
-							cout << " = MSG_ID_WORKSHOP_REPORT \r\n";
-							break;
+			case MSG_ID_STOP:
+				cout << "> Wait for response from server : MSG_ID_STOP\n";
+				l_requestedMsgBufferBytesSize = sizeof(SStopMsgBody);
+				break;
 
-						case MSG_ID_BIT_REPORT:
-							cout << " = MSG_ID_BIT_REPORT \r\n";
-							break;
+			case MSG_ID_WORKSHOP_REPORT:
+				cout << "> Wait for response from server : MSG_ID_WORKSHOP_REPORT\n";
+				l_requestedMsgBufferBytesSize = sizeof(SWorkShopReportMsgBody);
+				break;
 
-						case MSG_ID_ERROR:
-							cout << " = MSG_ID_ERROR \r\n";
-							break;
+			case MSG_ID_BIT_REPORT:
+				cout << "> Wait for response from server : MSG_ID_BIT_REPORT\n";
+				l_requestedMsgBufferBytesSize = sizeof(SBitReportMsgBody);
+				break;
 
-						default:
-							cout << " -> UNKNOWN MSG ID \r\n";
-							l_MsgIdValid = 0;
-					}
+			case MSG_ID_ERROR:
+				cout << "> Wait for response from server : MSG_ID_ERROR\n";
+				l_requestedMsgBufferBytesSize = sizeof(SErrorMsgBody);
+				break;
 
-				if(l_MsgIdValid != 0)
-				{
-					// Send data to server
-						if(send(m_clientSocket, &m_clientRequestedMsgId, sizeof(m_clientRequestedMsgId), 0) == -1)
-						{
-							cout << "Can't send data to server! Please try again \r\n";
-							continue;
-						}
-						cout << "> Request sent to server \r\n";
-
-					// Wait for response from server and then display it
-						memset(m_buffer, 0, 4096);
-						m_receivedBytesNb = recv(m_clientSocket, m_buffer, 4096, 0);
-						if (m_receivedBytesNb == -1)
-						{
-							cerr << "Error in recv()!" << endl;
-						}
-						else
-						{
-							cout << "SERVER > " << string(m_buffer, m_receivedBytesNb) << "\r\n";
-						}
-				}
-			} while(true);
-
-	    //	Close the client socket
-	    	close(m_clientSocket);
-	}
-	else
-	{
-		cerr << "TCP client is not initialized! Quitting" << endl;
-		return -1;
-	}
+			default:
+				cout << "> Unknown message ID\n";
+				return -1;
+		}
+		l_receivedMsgBufferBytesSize = recv(m_clientSocket, p_requestedMsgBuffer, l_requestedMsgBufferBytesSize, 0);
+		if (l_receivedMsgBufferBytesSize == -1)
+		{
+			cerr << "> Error in recv()!" << endl;
+			return -1;
+		}
 
 	return 1;
 }

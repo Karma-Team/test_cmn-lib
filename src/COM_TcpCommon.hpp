@@ -1,9 +1,6 @@
-/*
- * COM_TcpCommon.hpp
- *
- *  Created on: 13 janv. 2020
- *      Author: ahu
- */
+/**
+ * "COM_TcpCommon.hpp"
+ **/
 
 
 
@@ -19,13 +16,14 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <stdlib.h>
 #include <string>
+#include <thread>
 
 
 
 #define TCP_SERVER_IP_ADDRESS	"127.0.0.1"
 #define TCP_SERVER_PORT			54000
-#define BUFFER_SIZE				4096
 #define MAX_PATH_POINTS			10
 
 
@@ -36,6 +34,7 @@ using namespace std;
 
 enum EMsgId
 {
+	MSG_ID_UNKNOWN			= 0x00,
 	MSG_ID_PATH				= 0x01,
 	MSG_ID_PATH_CORRECTION	= 0x02,
 	MSG_ID_WORKSHOP_ORDER	= 0x03,

@@ -1,11 +1,11 @@
 /**
- * "COM_TcpCommon.hpp"
+ * "TCP_Common.hpp"
  **/
 
 
 
-#ifndef INC_COMTCPCOMMON_HPP_
-#define INC_COMTCPCOMMON_HPP_
+#ifndef INC_TCPCOMMON_HPP_
+#define INC_TCPCOMMON_HPP_
 
 
 
@@ -113,4 +113,4 @@ struct SErrorMsgBody
 
 
 
-#endif /* INC_COMTCPCOMMON_HPP_ */
+#endif /* INC_TCPCOMMON_HPP_ */

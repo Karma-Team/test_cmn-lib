@@ -1,19 +1,19 @@
 /**
- * "COM_TcpClient.hpp"
+ * "TCP_Client.hpp"
  **/
 
 
 
-#ifndef INC_COMTCPCLIENT_HPP_
-#define INC_COMTCPCLIENT_HPP_
+#ifndef INC_TCPCLIENT_HPP_
+#define INC_TCPCLIENT_HPP_
 
 
 
-#include "COM_TcpCommon.hpp"
+#include "TCP_Common.hpp"
 
 
 
-namespace COM
+namespace TCP
 {
 	/**
 		@class CTcpClient
@@ -53,13 +53,13 @@ namespace COM
 			int requestdMsgToServer(uint32_t p_requestedMsgId, void * p_buffer);
 
 		private:
-		    sockaddr_in 			m_serverSocketAddr;						//< TCP server socket address
-		    string 					m_serverIpAddress;						//< TCP server IP address
-		    int 					m_clientSocket;							//< TCP client socket
-		    int 					m_serverSocketPort;						//< TCP server socket port
+			sockaddr_in 			m_serverSocketAddr;						//< TCP server socket address
+			string 					m_serverIpAddress;						//< TCP server IP address
+			int 					m_clientSocket;							//< TCP client socket
+			int 					m_serverSocketPort;						//< TCP server socket port
 	};
 }
 
 
 
-#endif /* INC_COMTCPCLIENT_HPP_ */
+#endif /* INC_TCPCLIENT_HPP_ */

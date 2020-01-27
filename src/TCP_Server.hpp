@@ -1,19 +1,19 @@
 /**
- * "COM_TcpServer.hpp"
+ * "TCP_Server.hpp"
  **/
 
 
 
-#ifndef INC_COMTCPSERVER_HPP_
-#define INC_COMTCPSERVER_HPP_
+#ifndef INC_TCPSERVER_HPP_
+#define INC_TCPSERVER_HPP_
 
 
 
-#include "COM_TcpCommon.hpp"
+#include "TCP_Common.hpp"
 
 
 
-namespace COM
+namespace TCP
 {
 	/**
 		@class CTcpClient
@@ -67,7 +67,6 @@ namespace COM
 			int sendBitReportMsgToClient(uint32_t p_clientId);
 			int sendErrorMsgToClient(uint32_t p_clientId);
 
-
 		private:
 			thread					m_startThread;							//< TCP server start thread for waiting clients connection
 			thread					m_clientThread[SOMAXCONN];				//< TCP server reception thread for message from client
@@ -80,13 +79,13 @@ namespace COM
 			SBitReportMsgBody		m_bitReportMsgBody;						//< TCP server send buffer for bit report message from server to client
 			SErrorMsgBody 			m_errorMsgBody;							//< TCP server send buffer for error message to client
 			sockaddr_in 			m_serverSocketAddr;						//< TCP server socket address
-		    sockaddr_in 			m_clientSocketAddr[SOMAXCONN];			//< TCP clients sockets address
-		    socklen_t 				m_serverSocketAddrSize;					//< TCP client socket address size
-		    string 					m_serverIpAddress;						//< TCP server IP address
-		    uint32_t				m_serverClientNb;						//< TCP server clientNb
-		    int 					m_serverSocketPort;						//< TCP server socket port
+			sockaddr_in 			m_clientSocketAddr[SOMAXCONN];			//< TCP clients sockets address
+			socklen_t 				m_serverSocketAddrSize;					//< TCP client socket address size
+			string 					m_serverIpAddress;						//< TCP server IP address
+			uint32_t				m_serverClientNb;						//< TCP server clientNb
+			int 					m_serverSocketPort;						//< TCP server socket port
 			int 					m_serverSocket;							//< TCP server socket
-		    int 					m_clientSocket[SOMAXCONN];				//< TCP clients sockets
+			int 					m_clientSocket[SOMAXCONN];				//< TCP clients sockets
 			char 					m_clientName[SOMAXCONN][NI_MAXHOST];	//< TCP server clients name
 			char 					m_clientPort[SOMAXCONN][NI_MAXSERV];	//< TCP server clients port
 	};
@@ -94,4 +93,4 @@ namespace COM
 
 
 
-#endif /* INC_COMTCPSERVER_HPP_ */
+#endif /* INC_TCPSERVER_HPP_ */

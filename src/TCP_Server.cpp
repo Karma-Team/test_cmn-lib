@@ -1,14 +1,14 @@
 /**
- * "COM_TcpServer.cpp"
+ * "TCP_Server.cpp"
  **/
 
 
 
-#include <COM_TcpServer.hpp>
+#include "TCP_Server.hpp"
 
 
 
-COM::CTcpServer::CTcpServer()
+TCP::CTcpServer::CTcpServer()
 {
     m_serverSocketAddrSize			= 0;
     m_serverIpAddress 				= TCP_SERVER_IP_ADDRESS;
@@ -19,7 +19,7 @@ COM::CTcpServer::CTcpServer()
 
 
 
-COM::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
+TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
 {
     m_serverSocketAddrSize			= 0;
     m_serverIpAddress 				= p_serverSocketIpAddr;
@@ -30,7 +30,7 @@ COM::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
 
 
 
-COM::CTcpServer::~CTcpServer()
+TCP::CTcpServer::~CTcpServer()
 {
     // Close the server socket
     	close(m_serverSocket);
@@ -39,7 +39,7 @@ COM::CTcpServer::~CTcpServer()
 
 
 
-int COM::CTcpServer::initTcpServer()
+int TCP::CTcpServer::initTcpServer()
 {
 	cout << "> Initialize the TCP server" << endl;
 
@@ -78,13 +78,13 @@ int COM::CTcpServer::initTcpServer()
 		cout << "> Client connections enabled to the TCP server socket" << endl;
 
 	// Start the TCP server
-		m_startThread = thread(&COM::CTcpServer::startTcpServer, this);
+		m_startThread = thread(&TCP::CTcpServer::startTcpServer, this);
 
 	return m_serverSocket;
 }
 
 
-void COM::CTcpServer::startTcpServer()
+void TCP::CTcpServer::startTcpServer()
 
 {
 	cout << "> Start the TCP server" << endl;
@@ -100,7 +100,7 @@ void COM::CTcpServer::startTcpServer()
 				m_clientSocket[m_serverClientNb] 	= accept(m_serverSocket, (sockaddr*)&m_clientSocketAddr[m_serverClientNb], &l_clientSocketAddrSize);
 
 			// Create a client thread
-				m_clientThread[m_serverClientNb] = thread(&COM::CTcpServer::clientThread, this, m_serverClientNb);
+				m_clientThread[m_serverClientNb] = thread(&TCP::CTcpServer::clientThread, this, m_serverClientNb);
 				m_serverClientNb++;
 		}
 	}
@@ -111,7 +111,7 @@ void COM::CTcpServer::startTcpServer()
 }
 
 
-void COM::CTcpServer::clientThread(uint32_t p_clientId)
+void TCP::CTcpServer::clientThread(uint32_t p_clientId)
 {
 	cout << "> Client thread launched\n";
 
@@ -193,7 +193,7 @@ void COM::CTcpServer::clientThread(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendPathMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendPathMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_pathMsgBody, sizeof(SPathMsgBody), 0) == -1)
 	{
@@ -207,7 +207,7 @@ int COM::CTcpServer::sendPathMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendPathCorrectionMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendPathCorrectionMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_pathCorrectionMsgBody, sizeof(SPathCorrectionMsgBody), 0) == -1)
 	{
@@ -221,7 +221,7 @@ int COM::CTcpServer::sendPathCorrectionMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendWorkShopOrderMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendWorkShopOrderMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_workShopOrderMsgBody, sizeof(SWorkShopOrderMsgBody), 0) == -1)
 	{
@@ -235,7 +235,7 @@ int COM::CTcpServer::sendWorkShopOrderMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendStopMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendStopMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_stopMsgBody, sizeof(SStopMsgBody), 0) == -1)
 	{
@@ -249,7 +249,7 @@ int COM::CTcpServer::sendStopMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendWorkShopReportMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendWorkShopReportMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_workShopReportMsgBody, sizeof(SWorkShopReportMsgBody), 0) == -1)
 	{
@@ -263,7 +263,7 @@ int COM::CTcpServer::sendWorkShopReportMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendBitReportMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendBitReportMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_bitReportMsgBody, sizeof(SBitReportMsgBody), 0) == -1)
 	{
@@ -277,7 +277,7 @@ int COM::CTcpServer::sendBitReportMsgToClient(uint32_t p_clientId)
 
 
 
-int COM::CTcpServer::sendErrorMsgToClient(uint32_t p_clientId)
+int TCP::CTcpServer::sendErrorMsgToClient(uint32_t p_clientId)
 {
 	if(send(m_clientSocket[p_clientId], &m_errorMsgBody, sizeof(SErrorMsgBody), 0) == -1)
 	{

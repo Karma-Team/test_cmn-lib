@@ -1,14 +1,14 @@
 /**
- * "COM_TcpClient.cpp"
+ * "TCP_Client.cpp"
  **/
 
 
 
-#include <COM_TcpClient.hpp>
+#include "TCP_Client.hpp"
 
 
 
-COM::CTcpClient::CTcpClient()
+TCP::CTcpClient::CTcpClient()
 {
     m_serverIpAddress 				= TCP_SERVER_IP_ADDRESS;
 	m_clientSocket					= -1;
@@ -17,7 +17,7 @@ COM::CTcpClient::CTcpClient()
 
 
 
-COM::CTcpClient::CTcpClient(int p_serverSocketPort, string p_serverSocketIpAddr)
+TCP::CTcpClient::CTcpClient(int p_serverSocketPort, string p_serverSocketIpAddr)
 {
 	m_serverIpAddress				= p_serverSocketIpAddr;
 	m_clientSocket					= -1;
@@ -26,7 +26,7 @@ COM::CTcpClient::CTcpClient(int p_serverSocketPort, string p_serverSocketIpAddr)
 
 
 
-COM::CTcpClient::~CTcpClient()
+TCP::CTcpClient::~CTcpClient()
 {
     // Close the client socket
     	close(m_clientSocket);
@@ -35,7 +35,7 @@ COM::CTcpClient::~CTcpClient()
 
 
 
-int COM::CTcpClient::initTcpClient()
+int TCP::CTcpClient::initTcpClient()
 {
 	cout << "> Initialize the TCP client" << endl;
 
@@ -70,7 +70,7 @@ int COM::CTcpClient::initTcpClient()
 
 
 
-int COM::CTcpClient::requestdMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
+int TCP::CTcpClient::requestdMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
 {
 	uint32_t 	l_requestedMsgBufferBytesSize;
 	int			l_receivedMsgBufferBytesSize;

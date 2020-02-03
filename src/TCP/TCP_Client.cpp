@@ -70,7 +70,7 @@ int TCP::CTcpClient::initTcpClient()
 
 
 
-int TCP::CTcpClient::requestdMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
+int TCP::CTcpClient::requestedMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
 {
 	uint32_t 	l_requestedMsgBufferBytesSize;
 	int			l_receivedMsgBufferBytesSize;
@@ -88,37 +88,37 @@ int TCP::CTcpClient::requestdMsgToServer(uint32_t p_requestedMsgId, void* p_requ
 		{
 			case MSG_ID_PATH:
 				cout << "> Wait for response from server : MSG_ID_PATH\n";
-				l_requestedMsgBufferBytesSize = sizeof(SPathMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SPathMsg);
 				break;
 
 			case MSG_ID_PATH_CORRECTION:
 				cout << "> Wait for response from server : MSG_ID_PATH_CORRECTION\n";
-				l_requestedMsgBufferBytesSize = sizeof(SPathCorrectionMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SPathCorrectionMsg);
 				break;
 
 			case MSG_ID_WORKSHOP_ORDER:
 				cout << "> Wait for response from server : MSG_ID_WORKSHOP_ORDER\n";
-				l_requestedMsgBufferBytesSize = sizeof(SWorkShopOrderMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SWorkShopOrderMsg);
 				break;
 
 			case MSG_ID_STOP:
 				cout << "> Wait for response from server : MSG_ID_STOP\n";
-				l_requestedMsgBufferBytesSize = sizeof(SStopMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SStopMsg);
 				break;
 
 			case MSG_ID_WORKSHOP_REPORT:
 				cout << "> Wait for response from server : MSG_ID_WORKSHOP_REPORT\n";
-				l_requestedMsgBufferBytesSize = sizeof(SWorkShopReportMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SWorkShopReportMsg);
 				break;
 
 			case MSG_ID_BIT_REPORT:
 				cout << "> Wait for response from server : MSG_ID_BIT_REPORT\n";
-				l_requestedMsgBufferBytesSize = sizeof(SBitReportMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SBitReportMsg);
 				break;
 
 			case MSG_ID_ERROR:
 				cout << "> Wait for response from server : MSG_ID_ERROR\n";
-				l_requestedMsgBufferBytesSize = sizeof(SErrorMsgBody);
+				l_requestedMsgBufferBytesSize = sizeof(SErrorMsg);
 				break;
 
 			default:

@@ -50,7 +50,7 @@ namespace TCP
 				@param[in] p_RequestedMsgId : client requested message ID
 				@return -1 if failed
 			 **/
-			int requestdMsgToServer(uint32_t p_requestedMsgId, void * p_buffer);
+			int requestedMsgToServer(uint32_t p_requestedMsgId, void * p_buffer);
 
 		private:
 			sockaddr_in 			m_serverSocketAddr;						//< TCP server socket address

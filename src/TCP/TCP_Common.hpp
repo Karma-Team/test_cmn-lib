@@ -48,67 +48,116 @@ enum EMsgId
 
 struct SMsgHeader
 {
-	uint32_t id;
-	uint32_t size;
+	uint32_t 				id;
+	uint32_t 				size;
 };
 
 
 
 struct SPathMsgBody
 {
-	SMsgHeader 	hd;
-	uint32_t	pointsNb;
-	int32_t		xyPointsArray[MAX_PATH_POINTS];
+	uint32_t				pointsNb;
+	int32_t					xyPointsArray[MAX_PATH_POINTS];
+};
+
+
+
+struct SPathMsg
+{
+	SMsgHeader 				hd;
+	SPathMsgBody			body;
 };
 
 
 
 struct SPathCorrectionMsgBody
 {
-	SMsgHeader 	hd;
-	uint32_t	lastIdValid;
-	uint32_t	pointsNb;
-	int32_t		xyCorrectionPointsArray[MAX_PATH_POINTS];
+	uint32_t				lastIdValid;
+	uint32_t				pointsNb;
+	int32_t					xyCorrectionPointsArray[MAX_PATH_POINTS];
+};
+
+
+
+struct SPathCorrectionMsg
+{
+	SMsgHeader 				hd;
+	SPathCorrectionMsgBody 	body;
 };
 
 
 
 struct SWorkShopOrderMsgBody
 {
-	SMsgHeader 	hd;
-	// ...
+	uint32_t 				tmp;
+};
+
+
+
+struct SWorkShopOrderMsg
+{
+	SMsgHeader 				hd;
+	SWorkShopOrderMsgBody 	body;
 };
 
 
 
 struct SStopMsgBody
 {
-	SMsgHeader 	hd;
-	// ...
+	uint32_t 				tmp;
+};
+
+
+
+struct SStopMsg
+{
+	SMsgHeader 				hd;
+	SStopMsgBody 			body;
 };
 
 
 
 struct SWorkShopReportMsgBody
 {
-	SMsgHeader 	hd;
-	// ...
+	uint32_t 				tmp;
+};
+
+
+
+struct SWorkShopReportMsg
+{
+	SMsgHeader 				hd;
+	SWorkShopReportMsgBody 	body;
 };
 
 
 
 struct SBitReportMsgBody
 {
-	SMsgHeader 	hd;
-	// ...
+	uint32_t 				tmp;
+};
+
+
+
+struct SBitReportMsg
+{
+	SMsgHeader 				hd;
+	SBitReportMsgBody 		body;
 };
 
 
 
 struct SErrorMsgBody
 {
-	SMsgHeader 	hd;
-	// ...
+	uint32_t 				tmp;
+};
+
+
+
+struct SErrorMsg
+{
+	SMsgHeader 				hd;
+	SErrorMsgBody 			body;
 };
 
 

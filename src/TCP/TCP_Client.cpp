@@ -70,7 +70,7 @@ int TCP::CTcpClient::initTcpClient()
 
 
 
-int TCP::CTcpClient::requestedMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
+int TCP::CTcpClient::requestMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
 {
 	uint32_t 	l_requestedMsgBufferBytesSize;
 	int			l_receivedMsgBufferBytesSize;

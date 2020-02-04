@@ -10,25 +10,25 @@
 
 TCP::CTcpServer::CTcpServer()
 {
-    m_serverSocketAddrSize							= 0;
-    m_serverIpAddress 								= TCP_SERVER_IP_ADDRESS;
-    m_serverSocketPort								= TCP_SERVER_PORT;
-    m_serverClientNb 								= 0;
-	m_serverSocket									= -1;
-	struct SPathMsg 			l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
-	struct SPathCorrectionMsg	l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
-	struct SWorkShopOrderMsg 	l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
-	struct SStopMsg 			l_stopMsg			= {.hd={MSG_ID_STOP, 			sizeof(SStopMsg)}, 				.body={0}};
-	struct SWorkShopReportMsg 	l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
-	struct SBitReportMsg 		l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
-	struct SErrorMsg 			l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
-	m_pathMsg 										= l_pathMsg;
-	m_pathCorrectionMsg 							= l_pathCorrectionMsg;
-	m_workShopOrderMsg								= l_workShopOrderMsg;
-	m_stopMsg										= l_stopMsg;
-	m_workShopReportMsg								= l_workShopReportMsg;
-	m_bitReportMsg									= l_bitReportMsg;
-	m_errorMsg										= l_errorMsg;
+    m_serverSocketAddrSize						= 0;
+    m_serverIpAddress 							= TCP_SERVER_IP_ADDRESS;
+    m_serverSocketPort							= TCP_SERVER_PORT;
+    m_serverClientNb 							= 0;
+	m_serverSocket								= -1;
+	SPathMsg 				l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
+	SPathCorrectionMsg		l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
+	SWorkShopOrderMsg 		l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
+	SStopMsg 				l_stopMsg			= {.hd={MSG_ID_STOP, 			sizeof(SStopMsg)}, 				.body={0}};
+	SWorkShopReportMsg 		l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
+	SBitReportMsg 			l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
+	SErrorMsg 				l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
+	m_pathMsg 									= l_pathMsg;
+	m_pathCorrectionMsg 						= l_pathCorrectionMsg;
+	m_workShopOrderMsg							= l_workShopOrderMsg;
+	m_stopMsg									= l_stopMsg;
+	m_workShopReportMsg							= l_workShopReportMsg;
+	m_bitReportMsg								= l_bitReportMsg;
+	m_errorMsg									= l_errorMsg;
 }
 
 
@@ -40,20 +40,20 @@ TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
     m_serverSocketPort								= p_serverSocketPort;
     m_serverClientNb 								= 0;
 	m_serverSocket									= -1;
-	struct SPathMsg 			l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
-	struct SPathCorrectionMsg	l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
-	struct SWorkShopOrderMsg 	l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
-	struct SStopMsg 			l_stopMsg			= {.hd={MSG_ID_STOP, 			sizeof(SStopMsg)}, 				.body={0}};
-	struct SWorkShopReportMsg 	l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
-	struct SBitReportMsg 		l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
-	struct SErrorMsg 			l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
-	m_pathMsg 										= l_pathMsg;
-	m_pathCorrectionMsg 							= l_pathCorrectionMsg;
-	m_workShopOrderMsg								= l_workShopOrderMsg;
-	m_stopMsg										= l_stopMsg;
-	m_workShopReportMsg								= l_workShopReportMsg;
-	m_bitReportMsg									= l_bitReportMsg;
-	m_errorMsg										= l_errorMsg;
+	SPathMsg 				l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
+	SPathCorrectionMsg		l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
+	SWorkShopOrderMsg 		l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
+	SStopMsg 				l_stopMsg			= {.hd={MSG_ID_STOP, 			sizeof(SStopMsg)}, 				.body={0}};
+	SWorkShopReportMsg 		l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
+	SBitReportMsg 			l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
+	SErrorMsg 				l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
+	m_pathMsg 									= l_pathMsg;
+	m_pathCorrectionMsg 						= l_pathCorrectionMsg;
+	m_workShopOrderMsg							= l_workShopOrderMsg;
+	m_stopMsg									= l_stopMsg;
+	m_workShopReportMsg							= l_workShopReportMsg;
+	m_bitReportMsg								= l_bitReportMsg;
+	m_errorMsg									= l_errorMsg;
 }
 
 
@@ -177,285 +177,178 @@ void TCP::CTcpServer::clientThread(uint32_t p_clientId)
 				}
 
 			// Send requested message to client
-				switch(l_clientRequestedMsgId)
-				{
-					case MSG_ID_PATH:
-						cout << "> Requested message from client : MSG_ID_PATH\n";
-						this->sendPathMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_PATH_CORRECTION:
-						cout << "> Requested message from client : MSG_ID_PATH_CORRECTION\n";
-						this->sendPathCorrectionMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_WORKSHOP_ORDER:
-						cout << "> Requested message from client : MSG_ID_WORKSHOP_ORDER\n";
-						this->sendWorkShopOrderMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_STOP:
-						cout << "> Requested message from client : MSG_ID_STOP\n";
-						sendStopMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_WORKSHOP_REPORT:
-						cout << "> Requested message from client : MSG_ID_WORKSHOP_REPORT\n";
-						sendWorkShopReportMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_BIT_REPORT:
-						cout << "> Requested message from client : MSG_ID_BIT_REPORT\n";
-						sendBitReportMsgToClient(p_clientId);
-						break;
-
-					case MSG_ID_ERROR:
-						cout << "> Requested message from client : MSG_ID_ERROR\n";
-						sendErrorMsgToClient(p_clientId);
-						break;
-
-					default:
-						cout << "> Unknown message ID\n";
-				}
+				this->sendMsgToClient(l_clientRequestedMsgId, p_clientId);
 		}
-}
-
-
-
-int TCP::CTcpServer::sendPathMsgToClient(uint32_t p_clientId)
-{
-	m_pathMsg.hd.id 	= MSG_ID_PATH;
-	m_pathMsg.hd.size 	= sizeof(SPathMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_pathMsg, sizeof(SPathMsg), 0) == -1)
-	{
-		cout << "> Can't send path message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Path message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendPathCorrectionMsgToClient(uint32_t p_clientId)
-{
-	m_pathCorrectionMsg.hd.id 	= MSG_ID_PATH_CORRECTION;
-	m_pathCorrectionMsg.hd.size	= sizeof(SPathCorrectionMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg), 0) == -1)
-	{
-		cout << "> Can't send path correction message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Path correction message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendWorkShopOrderMsgToClient(uint32_t p_clientId)
-{
-	m_workShopOrderMsg.hd.id 	= MSG_ID_WORKSHOP_ORDER;
-	m_workShopOrderMsg.hd.size 	= sizeof(SWorkShopOrderMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg), 0) == -1)
-	{
-		cout << "> Can't send workshop order message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Workshop order message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendStopMsgToClient(uint32_t p_clientId)
-{
-	m_stopMsg.hd.id 	= MSG_ID_STOP;
-	m_stopMsg.hd.size 	= sizeof(SStopMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_stopMsg, sizeof(SStopMsg), 0) == -1)
-	{
-		cout << "> Can't send stop message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Stop message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendWorkShopReportMsgToClient(uint32_t p_clientId)
-{
-	m_workShopReportMsg.hd.id 	= MSG_ID_WORKSHOP_REPORT;
-	m_workShopReportMsg.hd.size = sizeof(SWorkShopReportMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_workShopReportMsg, sizeof(SWorkShopReportMsg), 0) == -1)
-	{
-		cout << "> Can't send workshop report message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Workshop report message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendBitReportMsgToClient(uint32_t p_clientId)
-{
-	m_bitReportMsg.hd.id 	= MSG_ID_BIT_REPORT;
-	m_bitReportMsg.hd.size 	= sizeof(SBitReportMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_bitReportMsg, sizeof(SBitReportMsg), 0) == -1)
-	{
-		cout << "> Can't send bit report message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Bit report message sent to client" << "\n";
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendErrorMsgToClient(uint32_t p_clientId)
-{
-	m_errorMsg.hd.id 	= MSG_ID_STOP;
-	m_errorMsg.hd.size 	= sizeof(SErrorMsg);
-
-	if(send(m_clientSocket[p_clientId], &m_errorMsg, sizeof(SErrorMsg), 0) == -1)
-	{
-		cout << "> Can't send Error message to client! Quitting " << endl;
-		return -1;
-	}
-
-	cout << "> Error message sent to client" << "\n";
-
-	return 1;
 }
 
 
 
 int TCP::CTcpServer::updateMsg(uint32_t p_updateMsgId, void* p_updateMsgBuffer)
 {
-	// Update message
-		switch(p_updateMsgId)
-		{
-			case MSG_ID_PATH:
-				cout << "> Update PATH message\n";
-				memcpy(&m_pathMsg.body, p_updateMsgBuffer, sizeof(SPathMsgBody));
-				break;
+	switch(p_updateMsgId)
+	{
+		case MSG_ID_PATH:
+			cout << "> Update PATH message\n";
+			memcpy(&m_pathMsg.body, p_updateMsgBuffer, sizeof(SPathMsgBody));
+			break;
 
-			case MSG_ID_PATH_CORRECTION:
-				cout << "> Update PATH_CORRECTION message\n";
-				memcpy(&m_pathCorrectionMsg.body, p_updateMsgBuffer, sizeof(SPathCorrectionMsgBody));
-				break;
+		case MSG_ID_PATH_CORRECTION:
+			cout << "> Update PATH_CORRECTION message\n";
+			memcpy(&m_pathCorrectionMsg.body, p_updateMsgBuffer, sizeof(SPathCorrectionMsgBody));
+			break;
 
-			case MSG_ID_WORKSHOP_ORDER:
-				cout << "> Update WORKSHOP_ORDER message\n";
-				memcpy(&m_workShopOrderMsg.body, p_updateMsgBuffer, sizeof(SWorkShopOrderMsgBody));
-				break;
+		case MSG_ID_WORKSHOP_ORDER:
+			cout << "> Update WORKSHOP_ORDER message\n";
+			memcpy(&m_workShopOrderMsg.body, p_updateMsgBuffer, sizeof(SWorkShopOrderMsgBody));
+			break;
 
-			case MSG_ID_STOP:
-				cout << "> Update STOP message\n";
-				memcpy(&m_stopMsg.body, p_updateMsgBuffer, sizeof(SStopMsgBody));
-				break;
+		case MSG_ID_STOP:
+			cout << "> Update STOP message\n";
+			memcpy(&m_stopMsg.body, p_updateMsgBuffer, sizeof(SStopMsgBody));
+			break;
 
-			case MSG_ID_WORKSHOP_REPORT:
-				cout << "> Update WORKSHOP_REPORT message\n";
-				memcpy(&m_workShopReportMsg.body, p_updateMsgBuffer, sizeof(SWorkShopReportMsgBody));
-				break;
+		case MSG_ID_WORKSHOP_REPORT:
+			cout << "> Update WORKSHOP_REPORT message\n";
+			memcpy(&m_workShopReportMsg.body, p_updateMsgBuffer, sizeof(SWorkShopReportMsgBody));
+			break;
 
-			case MSG_ID_BIT_REPORT:
-				cout << "> Update BIT_REPORT message\n";
-				memcpy(&m_bitReportMsg.body, p_updateMsgBuffer, sizeof(SBitReportMsgBody));
-				break;
+		case MSG_ID_BIT_REPORT:
+			cout << "> Update BIT_REPORT message\n";
+			memcpy(&m_bitReportMsg.body, p_updateMsgBuffer, sizeof(SBitReportMsgBody));
+			break;
 
-			case MSG_ID_ERROR:
-				cout << "> Update ERROR message\n";
-				memcpy(&m_errorMsg.body, p_updateMsgBuffer, sizeof(SErrorMsgBody));
-				break;
+		case MSG_ID_ERROR:
+			cout << "> Update ERROR message\n";
+			memcpy(&m_errorMsg.body, p_updateMsgBuffer, sizeof(SErrorMsgBody));
+			break;
 
-			default:
-				cout << "> Unknown message ID\n";
-		}
+		default:
+			cout << "> Unknown message ID\n";
+	}
 
 	return 1;
 }
 
 
 
-/*
-int TCP::CTcpServer::updatePathMsg(SPathMsgBody p_pathMsgBody)
+int TCP::CTcpServer::getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer)
 {
-	m_pathMsg.body = p_pathMsgBody;
+	switch(p_getMsgId)
+	{
+		case MSG_ID_PATH:
+			cout << "> Get PATH message\n";
+			memcpy(p_getMsgBuffer, &m_pathMsg, sizeof(SPathMsg));
+			break;
+
+		case MSG_ID_PATH_CORRECTION:
+			cout << "> Get PATH_CORRECTION message\n";
+			memcpy(p_getMsgBuffer, &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg));
+			break;
+
+		case MSG_ID_WORKSHOP_ORDER:
+			cout << "> Get WORKSHOP_ORDER message\n";
+			memcpy(p_getMsgBuffer, &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg));
+			break;
+
+		case MSG_ID_STOP:
+			cout << "> Get STOP message\n";
+			memcpy(p_getMsgBuffer, &m_stopMsg, sizeof(SStopMsg));
+			break;
+
+		case MSG_ID_WORKSHOP_REPORT:
+			cout << "> Get WORKSHOP_REPORT message\n";
+			memcpy(p_getMsgBuffer, &m_workShopReportMsg, sizeof(SWorkShopReportMsg));
+			break;
+
+		case MSG_ID_BIT_REPORT:
+			cout << "> Get BIT_REPORT message\n";
+			memcpy(p_getMsgBuffer, &m_bitReportMsg, sizeof(SBitReportMsg));
+			break;
+
+		case MSG_ID_ERROR:
+			cout << "> Get ERROR message\n";
+			memcpy(p_getMsgBuffer, &m_errorMsg, sizeof(SErrorMsg));
+			break;
+
+		default:
+			cout << "> Unknown message ID\n";
+	}
 
 	return 1;
 }
 
 
 
-int TCP::CTcpServer::updatePathCorrectionMsg(SPathCorrectionMsgBody p_pathCorrectionMsgBody)
+int TCP::CTcpServer::sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId)
 {
-	m_pathCorrectionMsg.body = p_pathCorrectionMsgBody;
+	switch(p_sendMsgId)
+	{
+		case MSG_ID_PATH:
+			cout << "> Send PATH message\n";
+			if(send(m_clientSocket[p_clientId], &m_pathMsg, sizeof(SPathMsg), 0) == -1)
+			{
+				cout << "> Can't send path message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_PATH_CORRECTION:
+			cout << "> Send PATH_CORRECTION message\n";
+			if(send(m_clientSocket[p_clientId], &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg), 0) == -1)
+			{
+				cout << "> Can't send path correction message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_WORKSHOP_ORDER:
+			cout << "> Send WORKSHOP_ORDER message\n";
+			if(send(m_clientSocket[p_clientId], &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg), 0) == -1)
+			{
+				cout << "> Can't send workshop order message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_STOP:
+			cout << "> Send STOP message\n";
+			if(send(m_clientSocket[p_clientId], &m_stopMsg, sizeof(SStopMsg), 0) == -1)
+			{
+				cout << "> Can't send stop message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_WORKSHOP_REPORT:
+			cout << "> Send WORKSHOP_REPORT message\n";
+			if(send(m_clientSocket[p_clientId], &m_workShopReportMsg, sizeof(SWorkShopReportMsg), 0) == -1)
+			{
+				cout << "> Can't send workshop report message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_BIT_REPORT:
+			cout << "> Send BIT_REPORT message\n";
+			if(send(m_clientSocket[p_clientId], &m_bitReportMsg, sizeof(SBitReportMsg), 0) == -1)
+			{
+				cout << "> Can't send bit report message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		case MSG_ID_ERROR:
+			cout << "> Send ERROR message\n";
+			if(send(m_clientSocket[p_clientId], &m_errorMsg, sizeof(SErrorMsg), 0) == -1)
+			{
+				cout << "> Can't send Error message to client! " << endl;
+				return -1;
+			}
+			break;
+
+		default:
+			cout << "> Unknown message ID\n";
+	}
 
 	return 1;
 }
-
-
-
-int TCP::CTcpServer::updateWorkShopOrderMsg(SWorkShopOrderMsgBody p_workShopOrderMsgBody)
-{
-	m_workShopOrderMsg.body = p_workShopOrderMsgBody;
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::updateStopMsg(SStopMsgBody p_stopMsgBody)
-{
-	m_stopMsg.body = p_stopMsgBody;
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::updateWorkShopReportMsg(SWorkShopReportMsgBody p_workShopReportMsgBody)
-{
-	m_workShopReportMsg.body = p_workShopReportMsgBody;
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::updateBitReportMsg(SBitReportMsgBody p_bitReportMsgBody)
-{
-	m_bitReportMsg.body = p_bitReportMsgBody;
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::updateErrorMsg(SErrorMsgBody p_errorMsgBody)
-{
-	m_errorMsg.body = p_errorMsgBody;
-
-	return 1;
-}
-*/

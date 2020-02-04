@@ -56,24 +56,23 @@ namespace TCP
 			void clientThread(uint32_t p_clientId);
 
 			/**
-				@brief update a buffer message
+				@brief update a buffer message (set)
 				@return -1 if failed
 			 **/
 			int updateMsg(uint32_t p_updateMsgId, void* p_updateMsgBuffer);
-			/*
-			int updatePathMsg(SPathMsgBody p_pathMsgBody);
-			int updatePathCorrectionMsg(SPathCorrectionMsgBody p_pathCorrectionMsgBody);
-			int updateWorkShopOrderMsg(SWorkShopOrderMsgBody p_workShopOrderMsgBody);
-			int updateStopMsg(SStopMsgBody p_stopMsgBody);
-			int updateWorkShopReportMsg(SWorkShopReportMsgBody p_workShopReportMsgBody);
-			int updateBitReportMsg(SBitReportMsgBody p_bitReportMsgBody);
-			int updateErrorMsg(SErrorMsgBody p_errorMsgBody);
-			*/
 
 			/**
-				@brief methods to send a message to TCP client
+				@brief get a buffer message (get)
 				@return -1 if failed
 			 **/
+			int getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer);
+
+			/**
+				@brief methods to send a message to TCP client (send)
+				@return -1 if failed
+			 **/
+			int sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId);
+			/*
 			int sendPathMsgToClient(uint32_t p_clientId);
 			int sendPathCorrectionMsgToClient(uint32_t p_clientId);
 			int sendWorkShopOrderMsgToClient(uint32_t p_clientId);
@@ -81,6 +80,7 @@ namespace TCP
 			int sendWorkShopReportMsgToClient(uint32_t p_clientId);
 			int sendBitReportMsgToClient(uint32_t p_clientId);
 			int sendErrorMsgToClient(uint32_t p_clientId);
+			*/
 
 		private:
 			thread					m_startThread;							//< TCP server start thread for waiting clients connection

@@ -72,19 +72,17 @@ namespace TCP
 				@return -1 if failed
 			 **/
 			int sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId);
-			/*
-			int sendPathMsgToClient(uint32_t p_clientId);
-			int sendPathCorrectionMsgToClient(uint32_t p_clientId);
-			int sendWorkShopOrderMsgToClient(uint32_t p_clientId);
-			int sendStopMsgToClient(uint32_t p_clientId);
-			int sendWorkShopReportMsgToClient(uint32_t p_clientId);
-			int sendBitReportMsgToClient(uint32_t p_clientId);
-			int sendErrorMsgToClient(uint32_t p_clientId);
-			*/
 
 		private:
 			thread					m_startThread;							//< TCP server start thread for waiting clients connection
 			thread					m_clientThread[SOMAXCONN];				//< TCP server reception thread for message from client
+			mutex 					m_pathMsgMutex;							//< TCP server mutex for path message
+			mutex 					m_pathCorrectionMsgMutex;				//< TCP server mutex for path correction message
+			mutex 					m_workShopOrderMsgMutex;				//< TCP server mutex for workshop order message
+			mutex 					m_stopMsgMutex;							//< TCP server mutex for stop message
+			mutex 					m_workShopReportMsgMutex;				//< TCP server mutex for workshop report message
+			mutex 					m_bitReportMsgMutex;					//< TCP server mutex for bit report message
+			mutex 					m_errorMsgMutex;						//< TCP server mutex for error message
 			SPathMsg 				m_pathMsg;								//< TCP server send buffer for path message to client
 			SPathCorrectionMsg 		m_pathCorrectionMsg;					//< TCP server send buffer for path correction message to client
 			SWorkShopOrderMsg 		m_workShopOrderMsg;						//< TCP server send buffer for workshop order message to client

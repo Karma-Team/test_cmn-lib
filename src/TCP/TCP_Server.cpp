@@ -35,11 +35,11 @@ TCP::CTcpServer::CTcpServer()
 
 TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
 {
-    m_serverSocketAddrSize							= 0;
-    m_serverIpAddress 								= p_serverSocketIpAddr;
-    m_serverSocketPort								= p_serverSocketPort;
-    m_serverClientNb 								= 0;
-	m_serverSocket									= -1;
+    m_serverSocketAddrSize						= 0;
+    m_serverIpAddress 							= p_serverSocketIpAddr;
+    m_serverSocketPort							= p_serverSocketPort;
+    m_serverClientNb 							= 0;
+	m_serverSocket								= -1;
 	SPathMsg 				l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
 	SPathCorrectionMsg		l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
 	SWorkShopOrderMsg 		l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
@@ -62,23 +62,18 @@ TCP::CTcpServer::~CTcpServer()
 {
     // Close the server socket
     	close(m_serverSocket);
-		cout << "> TCP server socket closed" << endl;
 }
 
 
 
 int TCP::CTcpServer::initTcpServer()
 {
-	cout << "> Initialize the TCP server" << endl;
-
 	// Create the TCP server socket
 		m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 		if(m_serverSocket == -1)
 		{
-			cerr << "> Can't create the server socket! Quitting" << endl;
 			return -1;
 		}
-		cout << "> TCP server socket created" << endl;
 
     // Assign an address and a port to the TCP server socket
 		m_serverSocketAddr.sin_family	= AF_INET;
@@ -92,18 +87,14 @@ int TCP::CTcpServer::initTcpServer()
 		m_serverSocketAddrSize = sizeof(m_serverSocketAddr);
 		if(bind(m_serverSocket, (sockaddr*)&m_serverSocketAddr, m_serverSocketAddrSize) == -1)
 		{
-			cerr << "> Can't assign an address and a port to the server socket! Quitting" << endl;
 			return -1;
 		}
-		cout << "> Address and port assigned to the TCP server socket" << endl;
 
     // Enable the TCP server socket to accept client connections
 		if(listen(m_serverSocket, SOMAXCONN) == -1)
 		{
-			cerr << "> Can't enable the server socket to accept connections! Quitting" << endl;
 			return -1;
 		}
-		cout << "> Client connections enabled to the TCP server socket" << endl;
 
 	// Start the TCP server
 		m_startThread = thread(&TCP::CTcpServer::startTcpServer, this);
@@ -113,10 +104,7 @@ int TCP::CTcpServer::initTcpServer()
 
 
 void TCP::CTcpServer::startTcpServer()
-
 {
-	cout << "> Start the TCP server" << endl;
-
     socklen_t 	l_clientSocketAddrSize;
 
 	if(m_serverSocket != -1)
@@ -142,22 +130,15 @@ void TCP::CTcpServer::startTcpServer()
 
 void TCP::CTcpServer::clientThread(uint32_t p_clientId)
 {
-	cout << "> Client thread launched\n";
-
 	uint32_t 	l_clientRequestedMsgId;
 	int			l_receivedBytesNb;
 
 	// Translate the client socket address to a location and a service name
 		memset(m_clientName[p_clientId], 0, NI_MAXHOST);
 		memset(m_clientPort[p_clientId], 0, NI_MAXSERV);
-		if(getnameinfo((sockaddr*)&m_clientSocketAddr[p_clientId], sizeof(m_clientSocketAddr[p_clientId]), m_clientName[p_clientId], NI_MAXHOST, m_clientPort[p_clientId], NI_MAXSERV, 0) == 0)
-		{
-			cout << "> " << m_clientName[p_clientId] << " connected on port " << m_clientPort[p_clientId] << endl;
-		}
-		else
+		if(getnameinfo((sockaddr*)&m_clientSocketAddr[p_clientId], sizeof(m_clientSocketAddr[p_clientId]), m_clientName[p_clientId], NI_MAXHOST, m_clientPort[p_clientId], NI_MAXSERV, 0) != 0)
 		{
 			inet_ntop(AF_INET, &this->m_clientSocketAddr[p_clientId].sin_addr, this->m_clientName[p_clientId], NI_MAXHOST);
-			cout << "> " << this->m_clientName[p_clientId] << " connected on port " << ntohs(this->m_clientSocketAddr[p_clientId].sin_port) << endl;
 		}
 
 	// Wait requested message ID from client
@@ -165,14 +146,8 @@ void TCP::CTcpServer::clientThread(uint32_t p_clientId)
 		{
 			// Receive requested message ID from client
 				l_receivedBytesNb = recv(m_clientSocket[p_clientId], &l_clientRequestedMsgId, sizeof(uint32_t), 0);
-				if(l_receivedBytesNb == -1)
+				if((l_receivedBytesNb == -1) || (l_receivedBytesNb == 0))
 				{
-					cerr << "> Error in recv()! Quitting" << endl;
-					break;
-				}
-				if(l_receivedBytesNb == 0)
-				{
-					cout << "> Client disconnected! Quitting " << endl;
 					break;
 				}
 
@@ -183,47 +158,130 @@ void TCP::CTcpServer::clientThread(uint32_t p_clientId)
 
 
 
+int TCP::CTcpServer::sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId)
+{
+	switch(p_sendMsgId)
+	{
+		case MSG_ID_PATH:
+			m_pathMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_pathMsg, sizeof(SPathMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_pathMsgMutex.unlock();
+			break;
+
+		case MSG_ID_PATH_CORRECTION:
+			m_pathCorrectionMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_pathCorrectionMsgMutex.unlock();
+			break;
+
+		case MSG_ID_WORKSHOP_ORDER:
+			m_workShopOrderMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_workShopOrderMsgMutex.unlock();
+			break;
+
+		case MSG_ID_STOP:
+			m_stopMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_stopMsg, sizeof(SStopMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_stopMsgMutex.unlock();
+			break;
+
+		case MSG_ID_WORKSHOP_REPORT:
+			m_workShopReportMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_workShopReportMsg, sizeof(SWorkShopReportMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_workShopReportMsgMutex.unlock();
+			break;
+
+		case MSG_ID_BIT_REPORT:
+			m_bitReportMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_bitReportMsg, sizeof(SBitReportMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_bitReportMsgMutex.unlock();
+			break;
+
+		case MSG_ID_ERROR:
+			m_errorMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_errorMsg, sizeof(SErrorMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_errorMsgMutex.unlock();
+			break;
+
+		default:
+			break;
+	}
+
+	return 1;
+}
+
+
+
 int TCP::CTcpServer::updateMsg(uint32_t p_updateMsgId, void* p_updateMsgBuffer)
 {
 	switch(p_updateMsgId)
 	{
 		case MSG_ID_PATH:
-			cout << "> Update PATH message\n";
+			m_pathMsgMutex.lock();
 			memcpy(&m_pathMsg.body, p_updateMsgBuffer, sizeof(SPathMsgBody));
+			m_pathMsgMutex.unlock();
 			break;
 
 		case MSG_ID_PATH_CORRECTION:
-			cout << "> Update PATH_CORRECTION message\n";
+			m_pathCorrectionMsgMutex.lock();
 			memcpy(&m_pathCorrectionMsg.body, p_updateMsgBuffer, sizeof(SPathCorrectionMsgBody));
+			m_pathCorrectionMsgMutex.unlock();
 			break;
 
 		case MSG_ID_WORKSHOP_ORDER:
-			cout << "> Update WORKSHOP_ORDER message\n";
+			m_workShopOrderMsgMutex.lock();
 			memcpy(&m_workShopOrderMsg.body, p_updateMsgBuffer, sizeof(SWorkShopOrderMsgBody));
+			m_workShopOrderMsgMutex.unlock();
 			break;
 
 		case MSG_ID_STOP:
-			cout << "> Update STOP message\n";
+			m_stopMsgMutex.lock();
 			memcpy(&m_stopMsg.body, p_updateMsgBuffer, sizeof(SStopMsgBody));
+			m_stopMsgMutex.unlock();
 			break;
 
 		case MSG_ID_WORKSHOP_REPORT:
-			cout << "> Update WORKSHOP_REPORT message\n";
+			m_workShopReportMsgMutex.lock();
 			memcpy(&m_workShopReportMsg.body, p_updateMsgBuffer, sizeof(SWorkShopReportMsgBody));
+			m_workShopReportMsgMutex.unlock();
 			break;
 
 		case MSG_ID_BIT_REPORT:
-			cout << "> Update BIT_REPORT message\n";
+			m_bitReportMsgMutex.lock();
 			memcpy(&m_bitReportMsg.body, p_updateMsgBuffer, sizeof(SBitReportMsgBody));
+			m_bitReportMsgMutex.unlock();
 			break;
 
 		case MSG_ID_ERROR:
-			cout << "> Update ERROR message\n";
+			m_errorMsgMutex.lock();
 			memcpy(&m_errorMsg.body, p_updateMsgBuffer, sizeof(SErrorMsgBody));
+			m_errorMsgMutex.unlock();
 			break;
 
 		default:
-			cout << "> Unknown message ID\n";
+			break;
 	}
 
 	return 1;
@@ -236,118 +294,49 @@ int TCP::CTcpServer::getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer)
 	switch(p_getMsgId)
 	{
 		case MSG_ID_PATH:
-			cout << "> Get PATH message\n";
+			m_pathMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_pathMsg, sizeof(SPathMsg));
+			m_pathMsgMutex.unlock();
 			break;
 
 		case MSG_ID_PATH_CORRECTION:
-			cout << "> Get PATH_CORRECTION message\n";
+			m_pathCorrectionMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg));
+			m_pathCorrectionMsgMutex.unlock();
 			break;
 
 		case MSG_ID_WORKSHOP_ORDER:
-			cout << "> Get WORKSHOP_ORDER message\n";
+			m_workShopOrderMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg));
+			m_workShopOrderMsgMutex.unlock();
 			break;
 
 		case MSG_ID_STOP:
-			cout << "> Get STOP message\n";
+			m_stopMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_stopMsg, sizeof(SStopMsg));
+			m_stopMsgMutex.unlock();
 			break;
 
 		case MSG_ID_WORKSHOP_REPORT:
-			cout << "> Get WORKSHOP_REPORT message\n";
+			m_workShopReportMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_workShopReportMsg, sizeof(SWorkShopReportMsg));
+			m_workShopReportMsgMutex.unlock();
 			break;
 
 		case MSG_ID_BIT_REPORT:
-			cout << "> Get BIT_REPORT message\n";
+			m_bitReportMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_bitReportMsg, sizeof(SBitReportMsg));
+			m_bitReportMsgMutex.unlock();
 			break;
 
 		case MSG_ID_ERROR:
-			cout << "> Get ERROR message\n";
+			m_errorMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_errorMsg, sizeof(SErrorMsg));
+			m_errorMsgMutex.unlock();
 			break;
 
 		default:
-			cout << "> Unknown message ID\n";
-	}
-
-	return 1;
-}
-
-
-
-int TCP::CTcpServer::sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId)
-{
-	switch(p_sendMsgId)
-	{
-		case MSG_ID_PATH:
-			cout << "> Send PATH message\n";
-			if(send(m_clientSocket[p_clientId], &m_pathMsg, sizeof(SPathMsg), 0) == -1)
-			{
-				cout << "> Can't send path message to client! " << endl;
-				return -1;
-			}
 			break;
-
-		case MSG_ID_PATH_CORRECTION:
-			cout << "> Send PATH_CORRECTION message\n";
-			if(send(m_clientSocket[p_clientId], &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg), 0) == -1)
-			{
-				cout << "> Can't send path correction message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		case MSG_ID_WORKSHOP_ORDER:
-			cout << "> Send WORKSHOP_ORDER message\n";
-			if(send(m_clientSocket[p_clientId], &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg), 0) == -1)
-			{
-				cout << "> Can't send workshop order message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		case MSG_ID_STOP:
-			cout << "> Send STOP message\n";
-			if(send(m_clientSocket[p_clientId], &m_stopMsg, sizeof(SStopMsg), 0) == -1)
-			{
-				cout << "> Can't send stop message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		case MSG_ID_WORKSHOP_REPORT:
-			cout << "> Send WORKSHOP_REPORT message\n";
-			if(send(m_clientSocket[p_clientId], &m_workShopReportMsg, sizeof(SWorkShopReportMsg), 0) == -1)
-			{
-				cout << "> Can't send workshop report message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		case MSG_ID_BIT_REPORT:
-			cout << "> Send BIT_REPORT message\n";
-			if(send(m_clientSocket[p_clientId], &m_bitReportMsg, sizeof(SBitReportMsg), 0) == -1)
-			{
-				cout << "> Can't send bit report message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		case MSG_ID_ERROR:
-			cout << "> Send ERROR message\n";
-			if(send(m_clientSocket[p_clientId], &m_errorMsg, sizeof(SErrorMsg), 0) == -1)
-			{
-				cout << "> Can't send Error message to client! " << endl;
-				return -1;
-			}
-			break;
-
-		default:
-			cout << "> Unknown message ID\n";
 	}
 
 	return 1;

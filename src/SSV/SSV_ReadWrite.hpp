@@ -27,6 +27,11 @@
 #define SSV_PACKET_DATA_LENGTH_BYTES_SIZE			1
 #define SSV_PACKET_CMD_BYTES_SIZE					1
 #define SSV_PACKET_CHECKSUM_BYTES_SIZE				1
+#define SSV_ANGLE_DEG_TOL							2
+#define SSV_ANGLE_DEG_LIMIT_MIN						0
+#define SSV_ANGLE_DEG_LIMIT_MAX						240
+#define SSV_ANGLE_LIMIT_MIN							0
+#define SSV_ANGLE_LIMIT_MAX							1000
 #define SSV_SERVO_MOVE_TIME_WRITE					1
 #define SSV_SERVO_MOVE_TIME_READ					2
 #define SSV_SERVO_MOVE_TIME_WAIT_WRITE				7
@@ -100,9 +105,29 @@ namespace SSV
 			int writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, uint32_t p_parameter);
 
 			/**
+				@brief method to read on the serial device port
+			 **/
+			int readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* p_buffer);
+
+			/**
 				@brief method to get a command length
 			 **/
 			uint32_t getCmdLength(uint32_t p_cmd);
+
+			/**
+				@brief method to get a return command length
+			 **/
+			uint32_t getRetCmdLength(uint32_t p_cmd);
+
+			/**
+				@brief method to convert command parameters
+			 **/
+			uint32_t convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthInBytes, unsigned char* p_bufferToConvert, void* p_buffer);
+
+			/**
+				@brief method to get a command checksum
+			 **/
+			uint32_t getCmdChecksum(unsigned char* p_buffer, uint32_t p_bufferBytesSize);
 
 			/**
 				@brief method to set command parameters

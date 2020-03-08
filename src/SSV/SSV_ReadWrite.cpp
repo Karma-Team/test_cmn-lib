@@ -254,9 +254,6 @@ int SSV::CLx16a::writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, uint3
 	uint32_t 		l_cmdLengthInBytes;		//< Include : data length, command value, command parameters and checksum
 	uint32_t 		l_parametersBytesSize;
 	uint32_t 		l_bufferBytesSize;
-	uint32_t 		l_checksum;
-	uint32_t 		l_checksumBracket;
-	uint32_t 		l_index;
 	unsigned char 	l_buffer[SSV_BUFFER_SIZE_MAX];
 
 	// Determine the buffer size
@@ -282,23 +279,37 @@ int SSV::CLx16a::writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, uint3
 			setCmdParameters(p_cmd, l_buffer, p_parameter);
 
 		// Checksum (Last Byte)
-			l_checksumBracket = 0;
-			for(l_index = 2; l_index < l_bufferBytesSize - 1; l_index++)
-			{
-				l_checksumBracket += l_buffer[l_index];
-			}
-			if(l_checksumBracket < 255)
-			{
-				l_checksum = 255 - l_checksumBracket;
-			}
-			else
-			{
-				l_checksum = l_checksumBracket & 0x000F;
-			}
-			l_buffer[l_bufferBytesSize-1] = l_checksum;
+			l_buffer[l_bufferBytesSize-1] = getCmdChecksum(l_buffer, l_bufferBytesSize);
 
 	// Write on the device serial port
-		write(m_deviceSerialPort, &l_buffer, l_bufferBytesSize + 1);
+		write(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
+
+	return 1;
+}
+
+
+
+int SSV::CLx16a::readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* p_buffer)
+{
+	uint32_t 		l_retCmdLengthInBytes;		//< Include : data length, command value, command parameters and checksum
+	uint32_t 		l_cmdLengthInBytes;			//< Include : data length, command value, command parameters and checksum
+	uint32_t 		l_parametersBytesSize;
+	uint32_t 		l_bufferBytesSize;
+	int		 		l_readBytesNb;
+	unsigned char 	l_buffer[SSV_BUFFER_SIZE_MAX];
+
+	// Determine the buffer size
+		l_retCmdLengthInBytes 	= getRetCmdLength(p_cmd);
+		l_parametersBytesSize 	= l_retCmdLengthInBytes - (SSV_PACKET_DATA_LENGTH_BYTES_SIZE + SSV_PACKET_CMD_BYTES_SIZE + SSV_PACKET_CHECKSUM_BYTES_SIZE);
+		l_bufferBytesSize 		= SSV_PACKET_HEADER_BYTES_SIZE + SSV_PACKET_SERVO_ID_BYTES_SIZE + SSV_PACKET_DATA_LENGTH_BYTES_SIZE + SSV_PACKET_CMD_BYTES_SIZE + l_parametersBytesSize + SSV_PACKET_CHECKSUM_BYTES_SIZE;
+
+	// Read on the device serial port
+		writeDeviceSerialPort(p_servoId, p_cmd, 0);
+		l_readBytesNb = read(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
+
+	// Convert the result
+		l_cmdLengthInBytes = getCmdLength(p_cmd);
+		convertCmdParameters(p_cmd, l_cmdLengthInBytes, l_buffer, p_buffer);
 
 	return 1;
 }
@@ -433,13 +444,95 @@ uint32_t SSV::CLx16a::getCmdLength(uint32_t p_cmd)
 
 
 
+uint32_t SSV::CLx16a::getRetCmdLength(uint32_t p_cmd)
+{
+	uint32_t 	l_retCmdLengthInBytes;		//< Include : data length, command value, command parameters and checksum
+
+	switch(p_cmd)
+	{
+		case SSV_SERVO_MOVE_TIME_READ:
+			l_retCmdLengthInBytes = 7;
+			break;
+
+		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+			l_retCmdLengthInBytes = 7;
+			break;
+
+		case SSV_SERVO_ID_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_ANGLE_OFFSET_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_ANGLE_LIMIT_READ:
+			l_retCmdLengthInBytes = 7;
+			break;
+
+		case SSV_SERVO_VIN_LIMIT_READ:
+			l_retCmdLengthInBytes = 7;
+			break;
+
+		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_TEMP_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_VIN_READ:
+			l_retCmdLengthInBytes = 5;
+			break;
+
+		case SSV_SERVO_POS_READ:
+			l_retCmdLengthInBytes = 5;
+			break;
+
+		case SSV_SERVO_OR_MOTOR_MODE_READ:
+			l_retCmdLengthInBytes = 7;
+			break;
+
+		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_LED_CTRL_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		case SSV_SERVO_LED_ERROR_READ:
+			l_retCmdLengthInBytes = 4;
+			break;
+
+		default:
+			l_retCmdLengthInBytes = 0;
+			break;
+	}
+
+	return l_retCmdLengthInBytes;
+}
+
+
+
 int SSV::CLx16a::setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, uint32_t p_parameter)
 {
 	switch(p_cmd)
 	{
 		case SSV_SERVO_MOVE_TIME_WRITE:
-			p_buffer[5] = p_parameter & 0x00FF;
-			p_buffer[6] = (p_parameter & 0xFF00) >> 8;
+			uint32_t l_position;
+			l_position = (uint32_t) (((double) p_parameter) / ((double) SSV_ANGLE_DEG_LIMIT_MAX) * ((double) SSV_ANGLE_LIMIT_MAX));
+			if(l_position < SSV_ANGLE_LIMIT_MIN)
+			{
+				l_position = SSV_ANGLE_LIMIT_MIN;
+			}
+			else if(l_position > SSV_ANGLE_LIMIT_MAX)
+			{
+				l_position = SSV_ANGLE_LIMIT_MAX;
+			}
+			p_buffer[5] = l_position & 0x00FF;
+			p_buffer[6] = (l_position & 0xFF00) >> 8;
 			p_buffer[7] = 0x00;
 			p_buffer[8] = 0x00;
 			break;
@@ -520,6 +613,112 @@ int SSV::CLx16a::setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, uint3
 			break;
 
 		case SSV_SERVO_LED_ERROR_WRITE:
+			break;
+
+		case SSV_SERVO_LED_ERROR_READ:
+			break;
+
+		default:
+			break;
+	}
+
+	return 1;
+}
+
+
+
+uint32_t SSV::CLx16a::getCmdChecksum(unsigned char* p_buffer, uint32_t p_bufferBytesSize)
+{
+	uint32_t 		l_checksum;
+	uint32_t 		l_checksumBracket;
+	uint32_t 		l_index;
+
+	l_checksumBracket = 0;
+	for(l_index = 2; l_index < p_bufferBytesSize - 1; l_index++)
+	{
+		l_checksumBracket += p_buffer[l_index];
+	}
+	if(l_checksumBracket < 255)
+	{
+		l_checksum = ~l_checksumBracket;
+	}
+	else
+	{
+		l_checksum = ~(l_checksumBracket & 0x00FF);
+	}
+	return l_checksum;
+}
+
+
+
+uint32_t SSV::CLx16a::convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthInBytes, unsigned char* p_bufferToConvert, void* p_buffer)
+{
+	uint32_t 		l_offsetInBytes = SSV_PACKET_HEADER_BYTES_SIZE + SSV_PACKET_SERVO_ID_BYTES_SIZE + SSV_PACKET_DATA_LENGTH_BYTES_SIZE + SSV_PACKET_CMD_BYTES_SIZE;
+	unsigned char 	l_parameter1;
+	unsigned char 	l_parameter2;
+
+	switch(p_cmd)
+	{
+		case SSV_SERVO_MOVE_TIME_READ:
+			break;
+
+		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+			break;
+
+		case SSV_SERVO_ID_READ:
+			break;
+
+		case SSV_SERVO_ANGLE_OFFSET_READ:
+			break;
+
+		case SSV_SERVO_ANGLE_LIMIT_READ:
+			break;
+
+		case SSV_SERVO_VIN_LIMIT_READ:
+			break;
+
+		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+			break;
+
+		case SSV_SERVO_TEMP_READ:
+			signed short l_temperature;
+			l_parameter1	= p_bufferToConvert[l_offsetInBytes];
+			l_temperature	= l_parameter1;
+			memcpy(p_buffer, &l_temperature, sizeof(signed short));
+			break;
+
+		case SSV_SERVO_VIN_READ:
+			signed short l_voltage;
+			l_parameter1 	= p_bufferToConvert[l_offsetInBytes];
+			l_parameter2 	= p_bufferToConvert[l_offsetInBytes+1];
+			l_voltage 		= (l_parameter1) + (l_parameter2 << 8);
+			memcpy(p_buffer, &l_voltage, sizeof(signed short));
+			break;
+
+		case SSV_SERVO_POS_READ:
+			signed short l_position;
+			l_parameter1 	= p_bufferToConvert[l_offsetInBytes];
+			l_parameter2 	= p_bufferToConvert[l_offsetInBytes+1];
+			l_position 		= (l_parameter1) + (l_parameter2 << 8);
+			if(l_position < SSV_ANGLE_LIMIT_MIN)
+			{
+				l_position = SSV_ANGLE_LIMIT_MIN;
+			}
+			else if(l_position > SSV_ANGLE_LIMIT_MAX)
+			{
+				l_position = SSV_ANGLE_LIMIT_MAX;
+			}
+			l_position = (signed short) ((((double) l_position) / ((double) SSV_ANGLE_LIMIT_MAX)) * ((double) SSV_ANGLE_DEG_LIMIT_MAX));
+			memcpy(p_buffer, &l_position, sizeof(signed short));
+			break;
+
+		case SSV_SERVO_OR_MOTOR_MODE_READ:
+			break;
+
+		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+			break;
+
+		case SSV_SERVO_LED_CTRL_READ:
 			break;
 
 		case SSV_SERVO_LED_ERROR_READ:

@@ -295,7 +295,6 @@ int SSV::CLx16a::readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* 
 	uint32_t 		l_cmdLengthInBytes;			//< Include : data length, command value, command parameters and checksum
 	uint32_t 		l_parametersBytesSize;
 	uint32_t 		l_bufferBytesSize;
-	int		 		l_readBytesNb;
 	unsigned char 	l_buffer[SSV_BUFFER_SIZE_MAX];
 
 	// Determine the buffer size
@@ -305,7 +304,7 @@ int SSV::CLx16a::readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* 
 
 	// Read on the device serial port
 		writeDeviceSerialPort(p_servoId, p_cmd, 0);
-		l_readBytesNb = read(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
+		read(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
 
 	// Convert the result
 		l_cmdLengthInBytes = getCmdLength(p_cmd);

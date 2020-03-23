@@ -38,6 +38,7 @@
 									<listOptionValue builtIn="false" value="/usr/local/include/opencv4"/>
 									<listOptionValue builtIn="false" value="/usr/include"/>
 									<listOptionValue builtIn="false" value="/opt/raspi/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/SPI}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/SSV}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/CSV}&quot;"/>
@@ -93,16 +94,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.94968123" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1106986969">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.2099695667" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
-						</toolChain>
-					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.477472937.1337582616" name="/" resourcePath="src/IMG">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.1172108674" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug" unusedChildren="">
-							<tool id="cdt.managedbuild.tool.gnu.archiver.base.78921325" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.77255782"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.185937775" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.882068287"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.21239152" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.881648762"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.906154613" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1004741188"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1709588364" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1825882267"/>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1083367449" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1106986969"/>
 						</toolChain>
 					</folderInfo>
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.477472937.1207731074" name="/" resourcePath="src/CSV">

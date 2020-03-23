@@ -10,6 +10,10 @@
 
 
 #include <iostream>
+#include <string>
+#include <cstdint>
+#include <thread>
+#include <mutex>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -17,15 +21,12 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
-#include <string>
-#include <thread>
-#include <mutex>
+#include <common.hpp>
 
 
 
 #define TCP_SERVER_IP_ADDRESS	"127.0.0.1"
 #define TCP_SERVER_PORT			54000
-#define MAX_PATH_POINTS			10
 
 
 
@@ -58,7 +59,7 @@ struct SMsgHeader
 struct SPathMsgBody
 {
 	uint32_t				pointsNb;
-	int32_t					xyPointsArray[MAX_PATH_POINTS];
+	SPoint					points[MAX_PATH_POINTS];
 };
 
 

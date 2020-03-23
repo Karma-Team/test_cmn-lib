@@ -38,34 +38,29 @@ namespace IMG
 			virtual ~CDetection();
 
 			/**
-				@brief thread-method to launch the detection process of cups and aruco codes
+				@brief method for read video
 			 **/
-			void cupsAndArucoCodesDetectionProcess();
+			void readVideo();
 
 			/**
-				@brief thread-method for read video
+				@brief method for cups detection
 			 **/
-			void readVideoThread();
+			void cupsDetection();
 
 			/**
-				@brief thread-method for cups detection
+				@brief method for aruco codes detection
 			 **/
-			void cupsDetectionThread();
+			void arucoCodesDetection();
 
 			/**
-				@brief thread-method for aruco codes detection
+				@brief method for robots detection
 			 **/
-			void arucoCodesDetectionThread();
+			void robotsDetection();
 
 			/**
-				@brief thread-method for robots detection
+				@brief method for merging detections
 			 **/
-			void robotsDetectionThread();
-
-			/**
-				@brief thread-method for merging detections
-			 **/
-			void mergeDetectionsThread();
+			void mergeDetections();
 
 			/**
 				@brief method for getting the IN image (from camera)
@@ -88,12 +83,6 @@ namespace IMG
 			void getOutImgMergeDetections();
 
 		private:
-			thread 			m_readVideoThread;						//< Read video thread
-			thread 			m_cupsDetectionThread;					//< Cups detection thread
-			thread 			m_arucoCodesDetectionThread;			//< Aruco codes detection thread
-			thread 			m_robotsDetectionThread[NB_ROBOTS_MAX];	//< Robots detection threads
-			thread 			m_mergeDetectionsThread;				//< Merge detections thread
-			mutex 			m_tmpInImgCameraHsvMutex;				//< IN image mutex
 			VideoCapture 	m_videoCapture;							//< Video capture (input)
 			Mat 			m_inImgCamera;							//< IN image (from camera)
 			Mat 			m_tmpInImgCameraHsv;					//< IN image (from camera, converted in HSV)
@@ -101,8 +90,6 @@ namespace IMG
 			Mat 			m_outImgRobotsDetection[NB_ROBOTS_MAX];	//< OUT image (from robots detector thread)
 			Mat 			m_outImgMergeDectections;				//< OUT image (from merge detections)
 			uint32_t		m_detectedRobotsNb;						//< Detected robots number
-			bool			m_detectionStatus;						//< Detection status
-			bool			m_readVideoSuccess;						//< Read video success indicator
 	};
 }
 

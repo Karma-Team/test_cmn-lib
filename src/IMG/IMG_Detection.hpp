@@ -28,24 +28,14 @@ namespace IMG
 			CDetection();
 
 			/**
-				@brief constructor
-			 **/
-			CDetection(const String& filename);
-
-			/**
 				@brief destructor
 			 **/
 			virtual ~CDetection();
 
 			/**
-				@brief method for read video
-			 **/
-			void readVideo();
-
-			/**
 				@brief method for cups detection
 			 **/
-			void cupsDetection();
+			void cupsDetection(Mat& inImgCamera);
 
 			/**
 				@brief method for aruco codes detection
@@ -83,7 +73,6 @@ namespace IMG
 			void getOutImgMergeDetections();
 
 		private:
-			VideoCapture 	m_videoCapture;							//< Video capture (input)
 			Mat 			m_inImgCamera;							//< IN image (from camera)
 			Mat 			m_tmpInImgCameraHsv;					//< IN image (from camera, converted in HSV)
 			Mat 			m_outImgCupsDetection;					//< OUT image (from cups detector thread)

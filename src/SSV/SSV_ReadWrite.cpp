@@ -249,7 +249,7 @@ int SSV::CLx16a::initDeviceSerialPort()
 
 
 
-int SSV::CLx16a::writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, uint32_t p_parameter)
+int SSV::CLx16a::writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, double* p_parameter)
 {
 	uint32_t 		l_cmdLengthInBytes;		//< Include : data length, command value, command parameters and checksum
 	uint32_t 		l_parametersBytesSize;
@@ -295,7 +295,9 @@ int SSV::CLx16a::readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* 
 	uint32_t 		l_cmdLengthInBytes;			//< Include : data length, command value, command parameters and checksum
 	uint32_t 		l_parametersBytesSize;
 	uint32_t 		l_bufferBytesSize;
+	int		 		l_readBytesNb;
 	unsigned char 	l_buffer[SSV_BUFFER_SIZE_MAX];
+	double		 	l_parameters[SSV_PARAMETERS_NB_MAX];
 
 	// Determine the buffer size
 		l_retCmdLengthInBytes 	= getRetCmdLength(p_cmd);
@@ -303,8 +305,9 @@ int SSV::CLx16a::readDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, void* 
 		l_bufferBytesSize 		= SSV_PACKET_HEADER_BYTES_SIZE + SSV_PACKET_SERVO_ID_BYTES_SIZE + SSV_PACKET_DATA_LENGTH_BYTES_SIZE + SSV_PACKET_CMD_BYTES_SIZE + l_parametersBytesSize + SSV_PACKET_CHECKSUM_BYTES_SIZE;
 
 	// Read on the device serial port
-		writeDeviceSerialPort(p_servoId, p_cmd, 0);
-		read(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
+		l_parameters[0] = 0;
+		writeDeviceSerialPort(p_servoId, p_cmd, l_parameters);
+		l_readBytesNb = read(m_deviceSerialPort, l_buffer, l_bufferBytesSize);
 
 	// Convert the result
 		l_cmdLengthInBytes = getCmdLength(p_cmd);
@@ -321,115 +324,115 @@ uint32_t SSV::CLx16a::getCmdLength(uint32_t p_cmd)
 
 	switch(p_cmd)
 	{
-		case SSV_SERVO_MOVE_TIME_WRITE:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WRITE:
 			l_cmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_MOVE_TIME_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_WRITE:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_WRITE:
 			l_cmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_MOVE_START:
+		case SSV_SERVO_MESSAGE_MOVE_START:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_MOVE_STOP:
+		case SSV_SERVO_MESSAGE_MOVE_STOP:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_ID_WRITE:
+		case SSV_SERVO_MESSAGE_ID_WRITE:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_ID_READ:
+		case SSV_SERVO_MESSAGE_ID_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_ADJUST:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_ADJUST:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_WRITE:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_WRITE:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_WRITE:
 			l_cmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_WRITE:
 			l_cmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_WRITE:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_TEMP_READ:
+		case SSV_SERVO_MESSAGE_TEMP_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_VIN_READ:
+		case SSV_SERVO_MESSAGE_VIN_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_POS_READ:
+		case SSV_SERVO_MESSAGE_POS_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_WRITE:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_WRITE:
 			l_cmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_READ:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_WRITE:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_WRITE:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_LED_CTRL_WRITE:
+		case SSV_SERVO_MESSAGE_LED_CTRL_WRITE:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_LED_CTRL_READ:
+		case SSV_SERVO_MESSAGE_LED_CTRL_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
-		case SSV_SERVO_LED_ERROR_WRITE:
+		case SSV_SERVO_MESSAGE_LED_ERROR_WRITE:
 			l_cmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_LED_ERROR_READ:
+		case SSV_SERVO_MESSAGE_LED_ERROR_READ:
 			l_cmdLengthInBytes = 3;
 			break;
 
@@ -449,59 +452,59 @@ uint32_t SSV::CLx16a::getRetCmdLength(uint32_t p_cmd)
 
 	switch(p_cmd)
 	{
-		case SSV_SERVO_MOVE_TIME_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_READ:
 			l_retCmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_READ:
 			l_retCmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_ID_READ:
+		case SSV_SERVO_MESSAGE_ID_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_READ:
 			l_retCmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_READ:
 			l_retCmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_TEMP_READ:
+		case SSV_SERVO_MESSAGE_TEMP_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_VIN_READ:
+		case SSV_SERVO_MESSAGE_VIN_READ:
 			l_retCmdLengthInBytes = 5;
 			break;
 
-		case SSV_SERVO_POS_READ:
+		case SSV_SERVO_MESSAGE_POS_READ:
 			l_retCmdLengthInBytes = 5;
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_READ:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_READ:
 			l_retCmdLengthInBytes = 7;
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_LED_CTRL_READ:
+		case SSV_SERVO_MESSAGE_LED_CTRL_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
-		case SSV_SERVO_LED_ERROR_READ:
+		case SSV_SERVO_MESSAGE_LED_ERROR_READ:
 			l_retCmdLengthInBytes = 4;
 			break;
 
@@ -515,106 +518,130 @@ uint32_t SSV::CLx16a::getRetCmdLength(uint32_t p_cmd)
 
 
 
-int SSV::CLx16a::setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, uint32_t p_parameter)
+int SSV::CLx16a::setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, double* p_parameter)
 {
 	switch(p_cmd)
 	{
-		case SSV_SERVO_MOVE_TIME_WRITE:
-			uint32_t l_position;
-			l_position = (uint32_t) (((double) p_parameter) / ((double) SSV_ANGLE_DEG_LIMIT_MAX) * ((double) SSV_ANGLE_LIMIT_MAX));
-			if(l_position < SSV_ANGLE_LIMIT_MIN)
-			{
-				l_position = SSV_ANGLE_LIMIT_MIN;
-			}
-			else if(l_position > SSV_ANGLE_LIMIT_MAX)
-			{
-				l_position = SSV_ANGLE_LIMIT_MAX;
-			}
-			p_buffer[5] = l_position & 0x00FF;
-			p_buffer[6] = (l_position & 0xFF00) >> 8;
-			p_buffer[7] = 0x00;
-			p_buffer[8] = 0x00;
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WRITE:
+			// AngleValue
+				uint32_t l_angleValue;
+				l_angleValue = (uint32_t) (p_parameter[0] / ((double) SSV_ANGLE_DEG_LIMIT_MAX) * ((double) SSV_ANGLE_LIMIT_MAX));
+				if(l_angleValue < SSV_ANGLE_LIMIT_MIN)
+				{
+					l_angleValue = SSV_ANGLE_LIMIT_MIN;
+				}
+				else if(l_angleValue > SSV_ANGLE_LIMIT_MAX)
+				{
+					l_angleValue = SSV_ANGLE_LIMIT_MAX;
+				}
+				p_buffer[5] = l_angleValue & 0x00FF;		// Parameter 1 > Lower 8 bits of angle value
+				p_buffer[6] = (l_angleValue & 0xFF00) >> 8;	// Parameter 2 > Higher 8 bits of angle value
+
+			// Time Value
+				p_buffer[7] = 0x00;							// Parameter 3 > Lower 8 bits of time value
+				p_buffer[8] = 0x00;							// Parameter 4 > Higher 8 bits of time value
 			break;
 
-		case SSV_SERVO_MOVE_TIME_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_READ:
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_WRITE:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_WRITE:
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_READ:
 			break;
 
-		case SSV_SERVO_MOVE_START:
+		case SSV_SERVO_MESSAGE_MOVE_START:
 			break;
 
-		case SSV_SERVO_MOVE_STOP:
+		case SSV_SERVO_MESSAGE_MOVE_STOP:
 			break;
 
-		case SSV_SERVO_ID_WRITE:
+		case SSV_SERVO_MESSAGE_ID_WRITE:
 			break;
 
-		case SSV_SERVO_ID_READ:
+		case SSV_SERVO_MESSAGE_ID_READ:
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_ADJUST:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_ADJUST:
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_WRITE:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_WRITE:
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_READ:
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_WRITE:
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_WRITE:
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_WRITE:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_WRITE:
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_TEMP_READ:
+		case SSV_SERVO_MESSAGE_TEMP_READ:
 			break;
 
-		case SSV_SERVO_VIN_READ:
+		case SSV_SERVO_MESSAGE_VIN_READ:
 			break;
 
-		case SSV_SERVO_POS_READ:
+		case SSV_SERVO_MESSAGE_POS_READ:
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_WRITE:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_WRITE:
+			// Servo mode
+				p_buffer[5] = 0x01;										// Parameter 1 > Servo mode (0 : position control mode / 1 : motor control mode)
+
+			// Null value
+				p_buffer[6] = 0x00;										// Parameter 2 > Null value
+
+			// Rotation speed value
+				double 		l_rotationSpeedValue;
+				uint32_t 	l_rotationSpeedValueTmp;
+				l_rotationSpeedValue = p_parameter[0];
+				if(l_rotationSpeedValue < SSV_ROTATION_SPEED_VALUE_LIMIT_MIN)
+				{
+					l_rotationSpeedValue = SSV_ROTATION_SPEED_VALUE_LIMIT_MIN;
+				}
+				else if(l_rotationSpeedValue > SSV_ROTATION_SPEED_VALUE_LIMIT_MAX)
+				{
+					l_rotationSpeedValue = SSV_ROTATION_SPEED_VALUE_LIMIT_MAX;
+				}
+				l_rotationSpeedValueTmp = (uint32_t) l_rotationSpeedValue;
+				p_buffer[7] = l_rotationSpeedValueTmp & 0x00FF;			// Parameter 3 > Lower 8 bits of rotation speed value
+				p_buffer[8] = (l_rotationSpeedValueTmp & 0xFF00) >> 8;	// Parameter 4 > Higher 8 bits of rotation speed value
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_READ:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_READ:
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_WRITE:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_WRITE:
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_READ:
 			break;
 
-		case SSV_SERVO_LED_CTRL_WRITE:
+		case SSV_SERVO_MESSAGE_LED_CTRL_WRITE:
 			break;
 
-		case SSV_SERVO_LED_CTRL_READ:
+		case SSV_SERVO_MESSAGE_LED_CTRL_READ:
 			break;
 
-		case SSV_SERVO_LED_ERROR_WRITE:
+		case SSV_SERVO_MESSAGE_LED_ERROR_WRITE:
 			break;
 
-		case SSV_SERVO_LED_ERROR_READ:
+		case SSV_SERVO_MESSAGE_LED_ERROR_READ:
 			break;
 
 		default:
@@ -658,35 +685,35 @@ uint32_t SSV::CLx16a::convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthI
 
 	switch(p_cmd)
 	{
-		case SSV_SERVO_MOVE_TIME_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_READ:
 			break;
 
-		case SSV_SERVO_MOVE_TIME_WAIT_READ:
+		case SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_READ:
 			break;
 
-		case SSV_SERVO_ID_READ:
+		case SSV_SERVO_MESSAGE_ID_READ:
 			break;
 
-		case SSV_SERVO_ANGLE_OFFSET_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_OFFSET_READ:
 			break;
 
-		case SSV_SERVO_ANGLE_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_ANGLE_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_VIN_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_VIN_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_TEMP_MAX_LIMIT_READ:
+		case SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_READ:
 			break;
 
-		case SSV_SERVO_TEMP_READ:
+		case SSV_SERVO_MESSAGE_TEMP_READ:
 			signed short l_temperature;
 			l_parameter1	= p_bufferToConvert[l_offsetInBytes];
 			l_temperature	= l_parameter1;
 			memcpy(p_buffer, &l_temperature, sizeof(signed short));
 			break;
 
-		case SSV_SERVO_VIN_READ:
+		case SSV_SERVO_MESSAGE_VIN_READ:
 			signed short l_voltage;
 			l_parameter1 	= p_bufferToConvert[l_offsetInBytes];
 			l_parameter2 	= p_bufferToConvert[l_offsetInBytes+1];
@@ -694,7 +721,7 @@ uint32_t SSV::CLx16a::convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthI
 			memcpy(p_buffer, &l_voltage, sizeof(signed short));
 			break;
 
-		case SSV_SERVO_POS_READ:
+		case SSV_SERVO_MESSAGE_POS_READ:
 			signed short l_position;
 			l_parameter1 	= p_bufferToConvert[l_offsetInBytes];
 			l_parameter2 	= p_bufferToConvert[l_offsetInBytes+1];
@@ -711,16 +738,16 @@ uint32_t SSV::CLx16a::convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthI
 			memcpy(p_buffer, &l_position, sizeof(signed short));
 			break;
 
-		case SSV_SERVO_OR_MOTOR_MODE_READ:
+		case SSV_SERVO_MESSAGE_OR_MOTOR_MODE_READ:
 			break;
 
-		case SSV_SERVO_LOAD_OR_UNLOAD_READ:
+		case SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_READ:
 			break;
 
-		case SSV_SERVO_LED_CTRL_READ:
+		case SSV_SERVO_MESSAGE_LED_CTRL_READ:
 			break;
 
-		case SSV_SERVO_LED_ERROR_READ:
+		case SSV_SERVO_MESSAGE_LED_ERROR_READ:
 			break;
 
 		default:

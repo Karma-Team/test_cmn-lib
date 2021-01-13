@@ -32,35 +32,38 @@
 #define SSV_ANGLE_DEG_LIMIT_MAX						240
 #define SSV_ANGLE_LIMIT_MIN							0
 #define SSV_ANGLE_LIMIT_MAX							1000
-#define SSV_SERVO_MOVE_TIME_WRITE					1
-#define SSV_SERVO_MOVE_TIME_READ					2
-#define SSV_SERVO_MOVE_TIME_WAIT_WRITE				7
-#define SSV_SERVO_MOVE_TIME_WAIT_READ				8
-#define SSV_SERVO_MOVE_START						11
-#define SSV_SERVO_MOVE_STOP							12
-#define SSV_SERVO_ID_WRITE							13
-#define SSV_SERVO_ID_READ							14
-#define SSV_SERVO_ANGLE_OFFSET_ADJUST				17
-#define SSV_SERVO_ANGLE_OFFSET_WRITE				18
-#define SSV_SERVO_ANGLE_OFFSET_READ					19
-#define SSV_SERVO_ANGLE_LIMIT_WRITE					20
-#define SSV_SERVO_ANGLE_LIMIT_READ					21
-#define SSV_SERVO_VIN_LIMIT_WRITE					22
-#define SSV_SERVO_VIN_LIMIT_READ					23
-#define SSV_SERVO_TEMP_MAX_LIMIT_WRITE				24
-#define SSV_SERVO_TEMP_MAX_LIMIT_READ				25
-#define SSV_SERVO_TEMP_READ							26
-#define SSV_SERVO_VIN_READ							27
-#define SSV_SERVO_POS_READ							28
-#define SSV_SERVO_OR_MOTOR_MODE_WRITE				29
-#define SSV_SERVO_OR_MOTOR_MODE_READ				30
-#define SSV_SERVO_LOAD_OR_UNLOAD_WRITE				31
-#define SSV_SERVO_LOAD_OR_UNLOAD_READ				32
-#define SSV_SERVO_LED_CTRL_WRITE					33
-#define SSV_SERVO_LED_CTRL_READ						34
-#define SSV_SERVO_LED_ERROR_WRITE					35
-#define SSV_SERVO_LED_ERROR_READ					36
+#define SSV_ROTATION_SPEED_VALUE_LIMIT_MIN			-1000
+#define SSV_ROTATION_SPEED_VALUE_LIMIT_MAX			1000
+#define SSV_SERVO_MESSAGE_MOVE_TIME_WRITE			1
+#define SSV_SERVO_MESSAGE_MOVE_TIME_READ			2
+#define SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_WRITE		7
+#define SSV_SERVO_MESSAGE_MOVE_TIME_WAIT_READ		8
+#define SSV_SERVO_MESSAGE_MOVE_START				11
+#define SSV_SERVO_MESSAGE_MOVE_STOP					12
+#define SSV_SERVO_MESSAGE_ID_WRITE					13
+#define SSV_SERVO_MESSAGE_ID_READ					14
+#define SSV_SERVO_MESSAGE_ANGLE_OFFSET_ADJUST		17
+#define SSV_SERVO_MESSAGE_ANGLE_OFFSET_WRITE		18
+#define SSV_SERVO_MESSAGE_ANGLE_OFFSET_READ			19
+#define SSV_SERVO_MESSAGE_ANGLE_LIMIT_WRITE			20
+#define SSV_SERVO_MESSAGE_ANGLE_LIMIT_READ			21
+#define SSV_SERVO_MESSAGE_VIN_LIMIT_WRITE			22
+#define SSV_SERVO_MESSAGE_VIN_LIMIT_READ			23
+#define SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_WRITE		24
+#define SSV_SERVO_MESSAGE_TEMP_MAX_LIMIT_READ		25
+#define SSV_SERVO_MESSAGE_TEMP_READ					26
+#define SSV_SERVO_MESSAGE_VIN_READ					27
+#define SSV_SERVO_MESSAGE_POS_READ					28
+#define SSV_SERVO_MESSAGE_OR_MOTOR_MODE_WRITE		29
+#define SSV_SERVO_MESSAGE_OR_MOTOR_MODE_READ		30
+#define SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_WRITE		31
+#define SSV_SERVO_MESSAGE_LOAD_OR_UNLOAD_READ		32
+#define SSV_SERVO_MESSAGE_LED_CTRL_WRITE			33
+#define SSV_SERVO_MESSAGE_LED_CTRL_READ				34
+#define SSV_SERVO_MESSAGE_LED_ERROR_WRITE			35
+#define SSV_SERVO_MESSAGE_LED_ERROR_READ			36
 #define SSV_BUFFER_SIZE_MAX							100
+#define SSV_PARAMETERS_NB_MAX						4
 
 
 
@@ -102,7 +105,7 @@ namespace SSV
 			/**
 				@brief method to write on the serial device port
 			 **/
-			int writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, uint32_t p_parameter);
+			int writeDeviceSerialPort(uint32_t p_servoId, uint32_t p_cmd, double* p_parameter);
 
 			/**
 				@brief method to read on the serial device port
@@ -132,7 +135,7 @@ namespace SSV
 			/**
 				@brief method to set command parameters
 			 **/
-			int setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, uint32_t p_parameter);
+			int setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, double* p_parameter);
 
 		private:
 			string		m_deviceSerialPortName;

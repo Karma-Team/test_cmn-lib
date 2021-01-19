@@ -13,8 +13,9 @@ TCP::CTcpServer::CTcpServer()
     m_serverSocketAddrSize						= 0;
     m_serverIpAddress 							= TCP_SERVER_IP_ADDRESS;
     m_serverSocketPort							= TCP_SERVER_PORT;
-    m_serverClientNb 							= 0;
+    m_serverClientCounter 						= 0;
 	m_serverSocket								= -1;
+	SPositionMsg 			l_positionMsg 		= {.hd={MSG_ID_POSITION, 		sizeof(SPositionMsg)}, 			.body={0, 0}};
 	SPathMsg 				l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
 	SPathCorrectionMsg		l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
 	SWorkShopOrderMsg 		l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
@@ -22,6 +23,7 @@ TCP::CTcpServer::CTcpServer()
 	SWorkShopReportMsg 		l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
 	SBitReportMsg 			l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
 	SErrorMsg 				l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
+	m_positionMsg 								= l_positionMsg;
 	m_pathMsg 									= l_pathMsg;
 	m_pathCorrectionMsg 						= l_pathCorrectionMsg;
 	m_workShopOrderMsg							= l_workShopOrderMsg;
@@ -38,8 +40,9 @@ TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
     m_serverSocketAddrSize						= 0;
     m_serverIpAddress 							= p_serverSocketIpAddr;
     m_serverSocketPort							= p_serverSocketPort;
-    m_serverClientNb 							= 0;
+    m_serverClientCounter 						= 0;
 	m_serverSocket								= -1;
+	SPositionMsg 			l_positionMsg 		= {.hd={MSG_ID_POSITION, 		sizeof(SPositionMsg)}, 			.body={0, 0}};
 	SPathMsg 				l_pathMsg 			= {.hd={MSG_ID_PATH, 			sizeof(SPathMsg)}, 				.body={0, {0,0,0,0,0,0,0,0,0,0}}};
 	SPathCorrectionMsg		l_pathCorrectionMsg	= {.hd={MSG_ID_PATH_CORRECTION, sizeof(SPathCorrectionMsg)}, 	.body={0, 0, {0,0,0,0,0,0,0,0,0,0}}};
 	SWorkShopOrderMsg 		l_workShopOrderMsg	= {.hd={MSG_ID_WORKSHOP_ORDER, 	sizeof(SWorkShopOrderMsg)}, 	.body={0}};
@@ -47,6 +50,7 @@ TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
 	SWorkShopReportMsg 		l_workShopReportMsg	= {.hd={MSG_ID_WORKSHOP_REPORT, sizeof(SWorkShopReportMsg)}, 	.body={0}};
 	SBitReportMsg 			l_bitReportMsg		= {.hd={MSG_ID_BIT_REPORT, 		sizeof(SBitReportMsg)}, 		.body={0}};
 	SErrorMsg 				l_errorMsg			= {.hd={MSG_ID_ERROR, 			sizeof(SErrorMsg)}, 			.body={0}};
+	m_positionMsg 								= l_positionMsg;
 	m_pathMsg 									= l_pathMsg;
 	m_pathCorrectionMsg 						= l_pathCorrectionMsg;
 	m_workShopOrderMsg							= l_workShopOrderMsg;
@@ -97,6 +101,7 @@ int TCP::CTcpServer::initTcpServer()
 		}
 
 	// Start the TCP server
+		srand((unsigned) time(0));
 		m_startThread = thread(&TCP::CTcpServer::startTcpServer, this);
 
 	return m_serverSocket;
@@ -109,15 +114,29 @@ void TCP::CTcpServer::startTcpServer()
 
 	if(m_serverSocket != -1)
 	{
-		while(m_serverClientNb < SOMAXCONN)
+		while(m_serverClientCounter < SOMAXCONN)
 		{
 			// Wait for a client connection
 				l_clientSocketAddrSize				= sizeof(sockaddr_in);
-				m_clientSocket[m_serverClientNb] 	= accept(m_serverSocket, (sockaddr*)&m_clientSocketAddr[m_serverClientNb], &l_clientSocketAddrSize);
+				m_clientSocket[m_serverClientCounter] 	= accept(m_serverSocket, (sockaddr*)&m_clientSocketAddr[m_serverClientCounter], &l_clientSocketAddrSize);
 
-			// Create a client thread
-				m_clientThread[m_serverClientNb] = thread(&TCP::CTcpServer::clientThread, this, m_serverClientNb);
-				m_serverClientNb++;
+			// Translate the client socket address to a location and a service name
+				memset(m_clientName[m_serverClientCounter], 0, NI_MAXHOST);
+				memset(m_clientPort[m_serverClientCounter], 0, NI_MAXSERV);
+				if(getnameinfo((sockaddr*)&m_clientSocketAddr[m_serverClientCounter], sizeof(m_clientSocketAddr[m_serverClientCounter]), m_clientName[m_serverClientCounter], NI_MAXHOST, m_clientPort[m_serverClientCounter], NI_MAXSERV, 0) != 0)
+				{
+					inet_ntop(AF_INET, &m_clientSocketAddr[m_serverClientCounter].sin_addr, m_clientName[m_serverClientCounter], NI_MAXHOST);
+				}
+
+			// Create the client threads
+				// Launch the thread sending periodic information to the client
+					m_sendPeriodicMsgToClientThread[m_serverClientCounter] = thread(&TCP::CTcpServer::sendPeriodicMsgToClientThread, this, m_serverClientCounter);
+
+				// Launch the thread waiting for a client request
+					m_treatClientRequestThread[m_serverClientCounter] = thread(&TCP::CTcpServer::treatClientRequestThread, this, m_serverClientCounter);
+
+			// Update the client counter
+				m_serverClientCounter++;
 		}
 	}
 	else
@@ -128,20 +147,64 @@ void TCP::CTcpServer::startTcpServer()
 
 
 
-void TCP::CTcpServer::clientThread(uint32_t p_clientId)
+void TCP::CTcpServer::sendPeriodicMsgToClientThread(uint32_t p_clientId)
+{
+	EMsgId		l_periodicMsgId = MSG_ID_POSITION;
+	uint32_t 	l_sleepTimeUs 	= 1000000;
+
+	// Send a periodic message to the client
+		while(true)
+		{
+			this->sendMsgToClient(l_periodicMsgId, p_clientId);
+
+			// AHU : mise a jour aleatoire temporaire (normalement mis a jour apres traitement d'image du mat sur le plan de jeu)
+			this->tmpUpdatePositionMsg();
+
+			usleep(l_sleepTimeUs);
+		}
+}
+
+
+
+void TCP::CTcpServer::tmpUpdatePositionMsg()
+{
+	int coordinatesMin 		= 0;
+	int coordinatesMax 		= 1000;
+	int coordinatesRange	= coordinatesMax - coordinatesMin + 1;
+	int angleMin 			= 0;
+	int angleMax 			= 360;
+	int angleRange 			= angleMax - angleMin + 1;
+
+	int xRand 		= rand() % coordinatesRange + coordinatesMin;
+	int yRand 		= rand() % coordinatesRange + coordinatesMin;
+	int angleRand 	= rand() % angleRange + angleMin;
+
+	m_positionMsgMutex.lock();
+	m_positionMsg.body.coordinates.x 	= xRand;
+	m_positionMsg.body.coordinates.y 	= yRand;
+	m_positionMsg.body.angle 			= angleRand;
+	/*
+	cout << "> Position message : \n";
+	cout << "	[hd]\n";
+	cout << "		id : " 		<< m_positionMsg.hd.id << "\n";
+	cout << "		size : " 	<< m_positionMsg.hd.size << "\n";
+	cout << "	[body]\n";
+	cout << "		angle : " 	<< m_positionMsg.body.angle << "\n";
+	cout << "		coordinates : [";
+	cout << "(x : " 			<< m_positionMsg.body.coordinates.x << " | ";
+	cout << "y : " 				<< m_positionMsg.body.coordinates.y << ")]\n";
+	*/
+	m_positionMsgMutex.unlock();
+}
+
+
+
+void TCP::CTcpServer::treatClientRequestThread(uint32_t p_clientId)
 {
 	uint32_t 	l_clientRequestedMsgId;
 	int			l_receivedBytesNb;
 
-	// Translate the client socket address to a location and a service name
-		memset(m_clientName[p_clientId], 0, NI_MAXHOST);
-		memset(m_clientPort[p_clientId], 0, NI_MAXSERV);
-		if(getnameinfo((sockaddr*)&m_clientSocketAddr[p_clientId], sizeof(m_clientSocketAddr[p_clientId]), m_clientName[p_clientId], NI_MAXHOST, m_clientPort[p_clientId], NI_MAXSERV, 0) != 0)
-		{
-			inet_ntop(AF_INET, &this->m_clientSocketAddr[p_clientId].sin_addr, this->m_clientName[p_clientId], NI_MAXHOST);
-		}
-
-	// Wait requested message ID from client
+	// Wait a requested message ID from the client
 		while(true)
 		{
 			// Receive requested message ID from client
@@ -162,6 +225,15 @@ int TCP::CTcpServer::sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId)
 {
 	switch(p_sendMsgId)
 	{
+		case MSG_ID_POSITION:
+			m_positionMsgMutex.lock();
+			if(send(m_clientSocket[p_clientId], &m_positionMsg, sizeof(SPositionMsg), 0) == -1)
+			{
+				return -1;
+			}
+			m_positionMsgMutex.unlock();
+			break;
+
 		case MSG_ID_PATH:
 			m_pathMsgMutex.lock();
 			if(send(m_clientSocket[p_clientId], &m_pathMsg, sizeof(SPathMsg), 0) == -1)
@@ -238,6 +310,12 @@ int TCP::CTcpServer::updateMsg(uint32_t p_updateMsgId, void* p_updateMsgBuffer)
 {
 	switch(p_updateMsgId)
 	{
+		case MSG_ID_POSITION:
+			m_positionMsgMutex.lock();
+			memcpy(&m_positionMsg.body, p_updateMsgBuffer, sizeof(SPositionMsgBody));
+			m_positionMsgMutex.unlock();
+			break;
+
 		case MSG_ID_PATH:
 			m_pathMsgMutex.lock();
 			memcpy(&m_pathMsg.body, p_updateMsgBuffer, sizeof(SPathMsgBody));
@@ -293,6 +371,12 @@ int TCP::CTcpServer::getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer)
 {
 	switch(p_getMsgId)
 	{
+		case MSG_ID_POSITION:
+			m_positionMsgMutex.lock();
+			memcpy(p_getMsgBuffer, &m_positionMsg, sizeof(SPositionMsg));
+			m_positionMsgMutex.unlock();
+			break;
+
 		case MSG_ID_PATH:
 			m_pathMsgMutex.lock();
 			memcpy(p_getMsgBuffer, &m_pathMsg, sizeof(SPathMsg));

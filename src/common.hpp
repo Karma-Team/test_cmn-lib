@@ -19,8 +19,8 @@
 
 struct SPoint
 {
-	int16_t	coordX;
-	int16_t coordY;
+	int16_t	x;
+	int16_t y;
 };
 
 

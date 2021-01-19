@@ -59,62 +59,114 @@ int TCP::CTcpClient::initTcpClient()
 			return -1;
 		}
 
+	// Launch the reception thead
+		m_receiveMsgFromServerThread = thread(&TCP::CTcpClient::receiveMsgFromServerThread, this);
+
 	return m_clientSocket;
 }
 
 
 
-int TCP::CTcpClient::requestMsgToServer(uint32_t p_requestedMsgId, void* p_requestedMsgBuffer)
+void TCP::CTcpClient::receiveMsgFromServerThread()
 {
-	uint32_t 	l_requestedMsgBufferBytesSize;
-	int			l_receivedMsgBufferBytesSize;
+	SMsgHeader 	l_msgHeader;
+	int			l_readBytesSize;
 
+	while(true)
+	{
+		// Read the message header
+		l_readBytesSize = recv(m_clientSocket, &l_msgHeader, sizeof(SMsgHeader), 0);
+		if (l_readBytesSize != -1)
+		{
+			// Read the message content
+			switch(l_msgHeader.id)
+			{
+				case MSG_ID_POSITION:
+					m_positionMsgMutex.lock();
+					memcpy(&m_positionMsg.hd, &l_msgHeader, sizeof(SMsgHeader));
+					l_readBytesSize = recv(m_clientSocket, &m_positionMsg.body, sizeof(SPositionMsgBody), 0);
+
+					// TMP
+					cout << "> Position message : \n";
+					cout << "	[hd]\n";
+					cout << "		id : " 		<< m_positionMsg.hd.id << "\n";
+					cout << "		size : " 	<< m_positionMsg.hd.size << "\n";
+					cout << "	[body]\n";
+					cout << "		angle : " 	<< m_positionMsg.body.angle << "\n";
+					cout << "		coordinates : [";
+					cout << "(x : " 			<< m_positionMsg.body.coordinates.x << " | ";
+					cout << "y : " 				<< m_positionMsg.body.coordinates.y << ")]\n";
+
+					m_positionMsgMutex.unlock();
+					break;
+
+				case MSG_ID_PATH:
+					m_pathMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_pathMsg, sizeof(SPathMsg), 0);
+					m_pathMsgMutex.unlock();
+					break;
+
+				case MSG_ID_PATH_CORRECTION:
+					m_pathCorrectionMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_pathCorrectionMsg, sizeof(SPathCorrectionMsg), 0);
+					m_pathCorrectionMsgMutex.unlock();
+					break;
+
+				case MSG_ID_WORKSHOP_ORDER:
+					m_workShopOrderMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_workShopOrderMsg, sizeof(SWorkShopOrderMsg), 0);
+					m_workShopOrderMsgMutex.unlock();
+					break;
+
+				case MSG_ID_STOP:
+					m_stopMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_stopMsg, sizeof(SStopMsg), 0);
+					m_stopMsgMutex.unlock();
+					break;
+
+				case MSG_ID_WORKSHOP_REPORT:
+					m_workShopReportMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_workShopReportMsg, sizeof(SWorkShopReportMsg), 0);
+					m_workShopReportMsgMutex.unlock();
+					break;
+
+				case MSG_ID_BIT_REPORT:
+					m_bitReportMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_bitReportMsg, sizeof(SBitReportMsg), 0);
+					m_bitReportMsgMutex.unlock();
+					break;
+
+				case MSG_ID_ERROR:
+					m_errorMsgMutex.lock();
+					l_readBytesSize = recv(m_clientSocket, &m_errorMsg, sizeof(SErrorMsg), 0);
+					m_errorMsgMutex.unlock();
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+}
+
+
+
+int TCP::CTcpClient::requestMsgToServer(uint32_t p_requestedMsgId)
+{
 	// Send the requested message ID to TCP server
 		if(send(m_clientSocket, &p_requestedMsgId, sizeof(uint32_t), 0) == -1)
 		{
 			return -1;
 		}
 
-	// Wait for the TCP server response
-		switch(p_requestedMsgId)
-		{
-			case MSG_ID_PATH:
-				l_requestedMsgBufferBytesSize = sizeof(SPathMsg);
-				break;
-
-			case MSG_ID_PATH_CORRECTION:
-				l_requestedMsgBufferBytesSize = sizeof(SPathCorrectionMsg);
-				break;
-
-			case MSG_ID_WORKSHOP_ORDER:
-				l_requestedMsgBufferBytesSize = sizeof(SWorkShopOrderMsg);
-				break;
-
-			case MSG_ID_STOP:
-				l_requestedMsgBufferBytesSize = sizeof(SStopMsg);
-				break;
-
-			case MSG_ID_WORKSHOP_REPORT:
-				l_requestedMsgBufferBytesSize = sizeof(SWorkShopReportMsg);
-				break;
-
-			case MSG_ID_BIT_REPORT:
-				l_requestedMsgBufferBytesSize = sizeof(SBitReportMsg);
-				break;
-
-			case MSG_ID_ERROR:
-				l_requestedMsgBufferBytesSize = sizeof(SErrorMsg);
-				break;
-
-			default:
-				return -1;
-		}
-		l_receivedMsgBufferBytesSize = recv(m_clientSocket, p_requestedMsgBuffer, l_requestedMsgBufferBytesSize, 0);
-		if (l_receivedMsgBufferBytesSize == -1)
-		{
-
-			return -1;
-		}
-
 	return 1;
+}
+
+
+
+void TCP::CTcpClient::getPositionMsg(SPositionMsg* p_positionMsg)
+{
+	m_positionMsgMutex.lock();
+	memcpy(p_positionMsg, &m_positionMsg, sizeof(SPositionMsg));
+	m_positionMsgMutex.unlock();
 }

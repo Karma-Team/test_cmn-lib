@@ -37,13 +37,14 @@ using namespace std;
 enum EMsgId
 {
 	MSG_ID_UNKNOWN			= 0x00,
-	MSG_ID_PATH				= 0x01,
-	MSG_ID_PATH_CORRECTION	= 0x02,
-	MSG_ID_WORKSHOP_ORDER	= 0x03,
-	MSG_ID_STOP				= 0x04,
-	MSG_ID_WORKSHOP_REPORT	= 0x05,
-	MSG_ID_BIT_REPORT		= 0x06,
-	MSG_ID_ERROR			= 0x07
+	MSG_ID_POSITION			= 0x01,
+	MSG_ID_PATH				= 0x02,
+	MSG_ID_PATH_CORRECTION	= 0x03,
+	MSG_ID_WORKSHOP_ORDER	= 0x04,
+	MSG_ID_STOP				= 0x05,
+	MSG_ID_WORKSHOP_REPORT	= 0x06,
+	MSG_ID_BIT_REPORT		= 0x07,
+	MSG_ID_ERROR			= 0x08
 };
 
 
@@ -52,6 +53,22 @@ struct SMsgHeader
 {
 	uint32_t 				id;
 	uint32_t 				size;
+};
+
+
+
+struct SPositionMsgBody
+{
+	SPoint					coordinates;
+	int16_t 				angle;
+};
+
+
+
+struct SPositionMsg
+{
+	SMsgHeader 				hd;
+	SPositionMsgBody		body;
 };
 
 

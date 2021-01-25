@@ -13,6 +13,10 @@
 
 
 
+/*
+shutdown to end read/write.
+close to releases data.
+ */
 namespace TCP
 {
 	/**
@@ -40,51 +44,66 @@ namespace TCP
 			virtual ~CTcpClient();
 
 			/**
-				@brief method to initialize the TCP client socket
+				@brief method to initialize the TCP client
 				@return the TCP client socket
 			 **/
 			int initTcpClient();
 
 			/**
-				@brief thread-method to receive periodic messages from the server
+				@brief method to close the TCP client
 			 **/
-			void receiveMsgFromServerThread();
+			void closeTcpClient();
 
 			/**
-				@brief method to request a message to TCP server
-				@param[in] p_RequestedMsgId : client requested message ID
-				@return -1 if failed
+				@brief thread-method to receive periodic messages from the server
 			 **/
-			int requestMsgToServer(uint32_t p_requestedMsgId);
+			void threadReceiveMsgFromServer();
+
+			/**
+				@brief monitor received messages from the server
+			 **/
+			void monitorMsgOrderBit();
+
+			/**
+				@brief update a buffer message (set)
+			 **/
+			void updateMsg(uint32_t p_updatEIdMsg, void* p_updateMsgBuffer);
 
 			/**
 				@brief methods to access private parameters
 			 **/
-			void getPositionMsg(SPositionMsg* p_positionMsg);
-			// AHU : accesseur a creer pour tous les messages + y faire appel avant de display dans le fichier de test client (idem pour serveur)
+			void getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer);
+
+			/**
+				@brief method to request a message to TCP server
+				@param[in] p_RequestedMsgId : client requested message ID
+			 **/
+			void sendMsgToServer(uint32_t p_msgId);
 
 		private:
-			thread					m_receiveMsgFromServerThread;	//< TCP client reception thread
-			mutex 					m_positionMsgMutex;				//< TCP client mutex for position message
-			mutex 					m_pathMsgMutex;					//< TCP client mutex for path message
-			mutex 					m_pathCorrectionMsgMutex;		//< TCP client mutex for path correction message
-			mutex 					m_workShopOrderMsgMutex;		//< TCP client mutex for workshop order message
-			mutex 					m_stopMsgMutex;					//< TCP client mutex for stop message
-			mutex 					m_workShopReportMsgMutex;		//< TCP client mutex for workshop report message
-			mutex 					m_bitReportMsgMutex;			//< TCP client mutex for bit report message
-			mutex 					m_errorMsgMutex;				//< TCP client mutex for error message
-			SPositionMsg 			m_positionMsg;					//< TCP client receive buffer for position message from server
-			SPathMsg 				m_pathMsg;						//< TCP client receive buffer for path message from server
-			SPathCorrectionMsg 		m_pathCorrectionMsg;			//< TCP client receive buffer for path correction message from server
-			SWorkShopOrderMsg 		m_workShopOrderMsg;				//< TCP client receive buffer for workshop order message from server
-			SStopMsg		 		m_stopMsg;						//< TCP client receive buffer for stop message from server
-			SWorkShopReportMsg		m_workShopReportMsg;			//< TCP client receive buffer for workshop order report message from server
-			SBitReportMsg			m_bitReportMsg;					//< TCP client receive buffer for bit report message from server to client
-			SErrorMsg	 			m_errorMsg;						//< TCP client receive buffer for error message from server
-			sockaddr_in 			m_serverSocketAddr;				//< TCP server socket address
-			string 					m_serverIpAddress;				//< TCP server IP address
-			int 					m_clientSocket;					//< TCP client socket
-			int 					m_serverSocketPort;				//< TCP server socket port
+			thread				m_threadReceiveMsgFromServer;	//< TCP client reception thread
+			mutex 				m_mutexMsgInfoKeepAlive;		//< TCP client mutex for info message : keep alive
+			mutex 				m_mutexMsgInfoPosition;			//< TCP client mutex for info message : position
+			mutex 				m_mutexMsgOrderBit;				//< TCP client mutex for order message : bit
+			mutex 				m_mutexMsgOrderPath;			//< TCP client mutex for order message : path
+			mutex 				m_mutexMsgOrderPathCorr;		//< TCP client mutex for order message : path correction
+			mutex 				m_mutexMsgOrderWorkShop;		//< TCP client mutex for order message : workshop
+			mutex 				m_mutexMsgOrderStop;			//< TCP client mutex for order message : stop
+			mutex 				m_mutexMsgReportWorkShop;		//< TCP client mutex for report message : workshop
+			mutex 				m_mutexMsgReportBit;			//< TCP client mutex for report message : bit
+			SMsgInfoKeepAlive 	m_msgInfoKeepAlive;				//< TCP client receive buffer for info message : keep alive
+			SMsgInfoPosition 	m_msgInfoPosition;				//< TCP client receive buffer for info message : position
+			SMsgOrderBit 		m_msgOrderBit;					//< TCP client receive buffer for order message : bit
+			SMsgOrderPath 		m_msgOrderPath;					//< TCP client receive buffer for order message : path
+			SMsgOrderPathCorr 	m_msgOrderPathCorr;				//< TCP client receive buffer for order message : path correction
+			SMsgOrderWorkShop 	m_msgOrderWorkShop;				//< TCP client receive buffer for order message : workshop
+			SMsgOrderStop		m_msgOrderStop;					//< TCP client receive buffer for order message : stop
+			SMsgReportWorkShop	m_msgReportWorkShop;			//< TCP client receive buffer for report message : workshop
+			SMsgReportBit		m_msgReportBit;					//< TCP client receive buffer for report message : bit
+			sockaddr_in 		m_serverSocketAddr;				//< TCP server socket address
+			string 				m_serverIpAddress;				//< TCP server IP address
+			int 				m_clientSocket;					//< TCP client socket
+			int 				m_serverSocketPort;				//< TCP server socket port
 	};
 }
 

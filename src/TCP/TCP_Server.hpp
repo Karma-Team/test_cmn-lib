@@ -13,6 +13,10 @@
 
 
 
+/*
+shutdown to end read/write.
+close to releases data.
+ */
 namespace TCP
 {
 	/**
@@ -40,81 +44,90 @@ namespace TCP
 			virtual ~CTcpServer();
 
 			/**
-				@brief method to initialize the TCP server socket
+				@brief method to initialize the TCP server
 				@return the TCP server socket
 			 **/
 			int initTcpServer();
 
 			/**
+				@brief method to close the TCP server
+			 **/
+			void closeTcpServer();
+
+			/**
 				@brief thread-method to start the TCP server socket and wait for clients connection
 			 **/
-			void startTcpServer();
+			void threadStartTcpServer();
 
 			/**
-				@brief thread-method to treat clients requests
+				@brief thread-method to send a periodic keep alive info message to the client
 			 **/
-			//void clientConnectionThread(uint32_t p_clientId);
+			void threadPeriodicSendToClientMsgInfoKeepAlive(uint32_t p_clientId);
 
 			/**
-				@brief thread-method to send periodic messages to the client
+				@brief thread-method to send a periodic position info message to the client
 			 **/
-			void sendPeriodicMsgToClientThread(uint32_t p_clientId);
+			void threadPeriodicSendToClientMsgInfoPosition(uint32_t p_clientId);
 
 			/**
-				@brief thread-method to treat clients requests
+				@brief thread-method to treat clients messages
 			 **/
-			void treatClientRequestThread(uint32_t p_clientId);
+			void threadTreatClientMsg(uint32_t p_clientId);
 
 			/**
 				@brief update a buffer message (set)
-				@return -1 if failed
 			 **/
-			int updateMsg(uint32_t p_updateMsgId, void* p_updateMsgBuffer);
-			void tmpUpdatePositionMsg();
+			void updateMsg(uint32_t p_updatEIdMsg, void* p_updateMsgBuffer);
 
 			/**
 				@brief get a buffer message (get)
-				@return -1 if failed
 			 **/
-			int getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer);
+			void getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer);
 
 			/**
 				@brief methods to send a message to TCP client (send)
 				@return -1 if failed
 			 **/
-			int sendMsgToClient(uint32_t p_sendMsgId, uint32_t p_clientId);
+			int sendMsgToClient(uint32_t p_msgId, uint32_t p_clientId);
+
+			// AHU : TMP
+			void tmpUpdateMsgInfoPosition();
 
 		private:
-			thread					m_startThread;								//< TCP server start thread for waiting clients connection
-			thread					m_clientConnexionThread[SOMAXCONN];			//< TCP server connexion thread
-			thread					m_sendPeriodicMsgToClientThread[SOMAXCONN];	//< TCP server periodic thread
-			thread					m_treatClientRequestThread[SOMAXCONN];		//< TCP server waiting thread
-			mutex 					m_positionMsgMutex;							//< TCP server mutex for position message
-			mutex 					m_pathMsgMutex;								//< TCP server mutex for path message
-			mutex 					m_pathCorrectionMsgMutex;					//< TCP server mutex for path correction message
-			mutex 					m_workShopOrderMsgMutex;					//< TCP server mutex for workshop order message
-			mutex 					m_stopMsgMutex;								//< TCP server mutex for stop message
-			mutex 					m_workShopReportMsgMutex;					//< TCP server mutex for workshop report message
-			mutex 					m_bitReportMsgMutex;						//< TCP server mutex for bit report message
-			mutex 					m_errorMsgMutex;							//< TCP server mutex for error message
-			SPositionMsg 			m_positionMsg;								//< TCP server send buffer for position message to client
-			SPathMsg 				m_pathMsg;									//< TCP server send buffer for path message to client
-			SPathCorrectionMsg 		m_pathCorrectionMsg;						//< TCP server send buffer for path correction message to client
-			SWorkShopOrderMsg 		m_workShopOrderMsg;							//< TCP server send buffer for workshop order message to client
-			SStopMsg		 		m_stopMsg;									//< TCP server send buffer for stop message to client
-			SWorkShopReportMsg		m_workShopReportMsg;						//< TCP server send buffer for workshop order report message to client
-			SBitReportMsg			m_bitReportMsg;								//< TCP server send buffer for bit report message from server to client
-			SErrorMsg	 			m_errorMsg;									//< TCP server send buffer for error message to client
-			sockaddr_in 			m_serverSocketAddr;							//< TCP server socket address
-			sockaddr_in 			m_clientSocketAddr[SOMAXCONN];				//< TCP clients sockets address
-			socklen_t 				m_serverSocketAddrSize;						//< TCP client socket address size
-			string 					m_serverIpAddress;							//< TCP server IP address
-			uint32_t				m_serverClientCounter;						//< TCP server clientNb
-			int 					m_serverSocketPort;							//< TCP server socket port
-			int 					m_serverSocket;								//< TCP server socket
-			int 					m_clientSocket[SOMAXCONN];					//< TCP clients sockets
-			char 					m_clientName[SOMAXCONN][NI_MAXHOST];		//< TCP server clients name
-			char 					m_clientPort[SOMAXCONN][NI_MAXSERV];		//< TCP server clients port
+			thread				m_threadStart;												//< TCP server start thread for waiting clients connection
+			thread				m_threadCientConnexion[SOMAXCONN];							//< TCP server connexion thread
+			thread				m_threadTreatClientMsg[SOMAXCONN];							//< TCP server waiting thread
+			thread				m_threadPeriodicSendToClientMsgInfoKeepAlive[SOMAXCONN];	//< TCP server periodic thread
+			thread				m_threadPeriodicSendToClientMsgInfoPosition[SOMAXCONN];		//< TCP server periodic thread
+			mutex 				m_mutexMsgInfoKeepAlive;									//< TCP client mutex for info message : keep alive
+			mutex 				m_mutexMsgInfoPosition;										//< TCP client mutex for info message : position
+			mutex 				m_mutexMsgOrderBit;											//< TCP client mutex for order message : bit
+			mutex 				m_mutexMsgOrderPath;										//< TCP client mutex for order message : path
+			mutex 				m_mutexMsgOrderPathCorr;									//< TCP client mutex for order message : path correction
+			mutex 				m_mutexMsgOrderWorkShop;									//< TCP client mutex for order message : workshop
+			mutex 				m_mutexMsgOrderStop;										//< TCP client mutex for order message : stop
+			mutex 				m_mutexMsgReportWorkShop[SOMAXCONN];						//< TCP client mutex for report message : workshop
+			mutex 				m_mutexMsgReportBit[SOMAXCONN];								//< TCP client mutex for report message : bit
+			SMsgInfoKeepAlive 	m_msgInfoKeepAlive;											//< TCP client receive buffer for info message : keep alive
+			SMsgInfoPosition 	m_msgInfoPosition;											//< TCP client receive buffer for info message : position
+			SMsgOrderBit 		m_msgOrderBit;												//< TCP client receive buffer for order message : bit
+			SMsgOrderPath 		m_msgOrderPath;												//< TCP client receive buffer for order message : path
+			SMsgOrderPathCorr 	m_msgOrderPathCorr;											//< TCP client receive buffer for order message : path correction
+			SMsgOrderWorkShop 	m_msgOrderWorkShop;											//< TCP client receive buffer for order message : workshop
+			SMsgOrderStop		m_msgOrderStop;												//< TCP client receive buffer for order message : stop
+			SMsgReportWorkShop	m_msgReportWorkShop[SOMAXCONN];								//< TCP client receive buffer for report message : workshop
+			SMsgReportBit		m_msgReportBit[SOMAXCONN];									//< TCP client receive buffer for report message : bit
+			sockaddr_in 		m_serverSocketAddr;											//< TCP server socket address
+			sockaddr_in 		m_clientSocketAddr[SOMAXCONN];								//< TCP clients sockets address
+			socklen_t 			m_serverSocketAddrSize;										//< TCP client socket address size
+			string 				m_serverIpAddress;											//< TCP server IP address
+			uint32_t			m_serverClientCounter;										//< TCP server clientNb
+			uint32_t 			m_serverClientStatus[SOMAXCONN];							//< TCP server client status
+			int 				m_serverSocketPort;											//< TCP server socket port
+			int 				m_serverSocket;												//< TCP server socket
+			int 				m_clientSocket[SOMAXCONN];									//< TCP clients sockets
+			char 				m_clientName[SOMAXCONN][NI_MAXHOST];						//< TCP server clients name
+			char 				m_clientPort[SOMAXCONN][NI_MAXSERV];						//< TCP server clients port
 	};
 }
 

@@ -21,12 +21,14 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <common.hpp>
 
 
 
 #define TCP_SERVER_IP_ADDRESS	"127.0.0.1"
 #define TCP_SERVER_PORT			54000
+#define TCP_DEBUG				1
 
 
 
@@ -34,17 +36,24 @@ using namespace std;
 
 
 
-enum EMsgId
+enum EIdMsg
 {
-	MSG_ID_UNKNOWN			= 0x00,
-	MSG_ID_POSITION			= 0x01,
-	MSG_ID_PATH				= 0x02,
-	MSG_ID_PATH_CORRECTION	= 0x03,
-	MSG_ID_WORKSHOP_ORDER	= 0x04,
-	MSG_ID_STOP				= 0x05,
-	MSG_ID_WORKSHOP_REPORT	= 0x06,
-	MSG_ID_BIT_REPORT		= 0x07,
-	MSG_ID_ERROR			= 0x08
+	// MAT vers ROBOT
+		// INFO
+		ID_MSG_INFO_KEEP_ALIVE	= 0x001,
+		ID_MSG_INFO_POSITION	= 0x002,
+
+		// ORDER
+		ID_MSG_ORDER_BIT		= 0x013,
+		ID_MSG_ORDER_PATH		= 0x014,
+		ID_MSG_ORDER_PATH_CORR	= 0x015,
+		ID_MSG_ORDER_WORKSHOP	= 0x016,
+		ID_MSG_ORDER_STOP		= 0x017,
+
+	// ROBOT vers MAT
+		// REPORT
+		ID_MSG_REPORT_BIT		= 0x101,
+		ID_MSG_REPORT_WORKSHOP	= 0x102
 };
 
 
@@ -57,7 +66,22 @@ struct SMsgHeader
 
 
 
-struct SPositionMsgBody
+struct SMsgInfoKeepAliveBody
+{
+	bool	 				isAlive;
+};
+
+
+
+struct SMsgInfoKeepAlive
+{
+	SMsgHeader 				hd;
+	SMsgInfoKeepAliveBody	body;
+};
+
+
+
+struct SMsgInfoPositionBody
 {
 	SPoint					coordinates;
 	int16_t 				angle;
@@ -65,15 +89,30 @@ struct SPositionMsgBody
 
 
 
-struct SPositionMsg
+struct SMsgInfoPosition
 {
 	SMsgHeader 				hd;
-	SPositionMsgBody		body;
+	SMsgInfoPositionBody	body;
 };
 
 
 
-struct SPathMsgBody
+struct SMsgOrderBitBody
+{
+	uint32_t				tmp;
+};
+
+
+
+struct SMsgOrderBit
+{
+	SMsgHeader 				hd;
+	SMsgOrderBitBody		body;
+};
+
+
+
+struct SMsgOrderPathBody
 {
 	uint32_t				pointsNb;
 	SPoint					points[MAX_PATH_POINTS];
@@ -81,103 +120,109 @@ struct SPathMsgBody
 
 
 
-struct SPathMsg
+struct SMsgOrderPath
 {
 	SMsgHeader 				hd;
-	SPathMsgBody			body;
+	SMsgOrderPathBody		body;
 };
 
 
 
-struct SPathCorrectionMsgBody
+struct SMsgOrderPathCorrBody
 {
 	uint32_t				lastIdValid;
 	uint32_t				pointsNb;
-	int32_t					xyCorrectionPointsArray[MAX_PATH_POINTS];
+	SPoint					points[MAX_PATH_POINTS];
 };
 
 
 
-struct SPathCorrectionMsg
+struct SMsgOrderPathCorr
 {
 	SMsgHeader 				hd;
-	SPathCorrectionMsgBody 	body;
+	SMsgOrderPathCorrBody 	body;
 };
 
 
 
-struct SWorkShopOrderMsgBody
+struct SMsgOrderWorkShopBody
 {
 	uint32_t 				tmp;
 };
 
 
 
-struct SWorkShopOrderMsg
+struct SMsgOrderWorkShop
 {
 	SMsgHeader 				hd;
-	SWorkShopOrderMsgBody 	body;
+	SMsgOrderWorkShopBody 	body;
 };
 
 
 
-struct SStopMsgBody
+struct SMsgOrderStopBody
 {
 	uint32_t 				tmp;
 };
 
 
 
-struct SStopMsg
+struct SMsgOrderStop
 {
 	SMsgHeader 				hd;
-	SStopMsgBody 			body;
+	SMsgOrderStopBody 		body;
 };
 
 
 
-struct SWorkShopReportMsgBody
+struct SMsgReportWorkShopBody
 {
 	uint32_t 				tmp;
 };
 
 
 
-struct SWorkShopReportMsg
+struct SMsgReportWorkShop
 {
 	SMsgHeader 				hd;
-	SWorkShopReportMsgBody 	body;
+	SMsgReportWorkShopBody 	body;
 };
 
 
 
-struct SBitReportMsgBody
+struct SMsgReportBitBody
 {
 	uint32_t 				tmp;
 };
 
 
 
-struct SBitReportMsg
+struct SMsgReportBit
 {
 	SMsgHeader 				hd;
-	SBitReportMsgBody 		body;
+	SMsgReportBitBody 		body;
 };
 
 
 
-struct SErrorMsgBody
+struct SMsgErrorBody
 {
 	uint32_t 				tmp;
 };
 
 
 
-struct SErrorMsg
-{
-	SMsgHeader 				hd;
-	SErrorMsgBody 			body;
-};
+#if TCP_DEBUG
+void displayMsgInfoKeepAlive(SMsgInfoKeepAlive* p_msgInfoKeepAlive);
+void displayMsgInfoPosition(SMsgInfoPosition* p_msgInfoPosition);
+void displayMsgOrderBit(SMsgOrderBit* p_msgOrderBit);
+void displayMsgOrderPath(SMsgOrderPath* p_msgOrderPath);
+void displayMsgOrderPathCorr(SMsgOrderPathCorr* p_msgOrderPathCorr);
+void displayMsgOrderWorkShop(SMsgOrderWorkShop* p_msgOrderWorkShop);
+void displayMsgOrderStop(SMsgOrderStop* p_msgOrderStop);
+void displayMsgReportBit(SMsgReportBit* p_msgReportBit);
+void displayMsgReportWorkShop(SMsgReportWorkShop* p_msgReportWorkShop);
+#endif
 
 
 

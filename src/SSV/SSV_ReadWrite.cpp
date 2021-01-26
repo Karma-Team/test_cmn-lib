@@ -525,7 +525,7 @@ int SSV::CLx16a::setCmdParameters(uint32_t p_cmd, unsigned char* p_buffer, doubl
 		case SSV_SERVO_MESSAGE_MOVE_TIME_WRITE:
 			// AngleValue
 				uint32_t l_angleValue;
-				l_angleValue = (uint32_t) (p_parameter[0] / ((double) SSV_ANGLE_DEG_LIMIT_MAX) * ((double) SSV_ANGLE_LIMIT_MAX));
+				l_angleValue = (uint32_t) p_parameter[0];
 				if(l_angleValue < SSV_ANGLE_LIMIT_MIN)
 				{
 					l_angleValue = SSV_ANGLE_LIMIT_MIN;
@@ -734,7 +734,6 @@ uint32_t SSV::CLx16a::convertCmdParameters(uint32_t p_cmd, uint32_t p_cmdLengthI
 			{
 				l_position = SSV_ANGLE_LIMIT_MAX;
 			}
-			l_position = (signed short) ((((double) l_position) / ((double) SSV_ANGLE_LIMIT_MAX)) * ((double) SSV_ANGLE_DEG_LIMIT_MAX));
 			memcpy(p_buffer, &l_position, sizeof(signed short));
 			break;
 

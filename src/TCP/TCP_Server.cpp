@@ -8,12 +8,16 @@
 
 
 
+using namespace std;
+
+
+
 TCP::CTcpServer::CTcpServer()
 {
     m_serverSocketAddrSize						= 0;
     m_serverIpAddress 							= TCP_SERVER_IP_ADDRESS;
     m_serverSocketPort							= TCP_SERVER_PORT;
-    m_serverClientCounter 						= 0;
+    m_clientCounter 							= 0;
 	m_serverSocket								= -1;
 	SMsgInfoKeepAlive 		l_msgInfoKeepAlive	= {.hd={ID_MSG_INFO_KEEP_ALIVE,	sizeof(SMsgInfoKeepAlive)}, 	.body={true}};
 	SMsgInfoPosition 		l_msgInfoPosition 	= {.hd={ID_MSG_INFO_POSITION, 	sizeof(SMsgInfoPosition)}, 		.body={0, 0}};
@@ -31,22 +35,25 @@ TCP::CTcpServer::CTcpServer()
 	m_msgOrderPathCorr 							= l_msgOrderPathCorr;
 	m_msgOrderWorkShop							= l_msgOrderWorkShop;
 	m_msgOrderStop								= l_msgOrderStop;
+	m_serverSocketStatus 						= 1;
 	for(uint32_t iClient=0 ; iClient<SOMAXCONN ; iClient++)
 	{
 		m_msgReportBit[iClient]					= l_msgReportBit;
 		m_msgReportWorkShop[iClient]			= l_msgReportWorkShop;
-		m_serverClientStatus[iClient]			= 0;
+		m_clientSocketStatus[iClient]			= 0;
+		m_clientJoinThreadsStatus[iClient] 		= 1;
 	}
+	m_allClientsJoinThreadsStatus 				= 1;
 }
 
 
 
-TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
+TCP::CTcpServer::CTcpServer(int p_serverSocketPort, std::string p_serverSocketIpAddr)
 {
     m_serverSocketAddrSize						= 0;
     m_serverIpAddress 							= p_serverSocketIpAddr;
     m_serverSocketPort							= p_serverSocketPort;
-    m_serverClientCounter 						= 0;
+    m_clientCounter 							= 0;
 	m_serverSocket								= -1;
 	SMsgInfoKeepAlive 		l_msgInfoKeepAlive	= {.hd={ID_MSG_INFO_KEEP_ALIVE,	sizeof(SMsgInfoKeepAlive)}, 	.body={true}};
 	SMsgInfoPosition 		l_msgInfoPosition 	= {.hd={ID_MSG_INFO_POSITION, 	sizeof(SMsgInfoPosition)}, 		.body={0, 0}};
@@ -64,188 +71,233 @@ TCP::CTcpServer::CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr)
 	m_msgOrderPathCorr 							= l_msgOrderPathCorr;
 	m_msgOrderWorkShop							= l_msgOrderWorkShop;
 	m_msgOrderStop								= l_msgOrderStop;
+	m_serverSocketStatus 						= 1;
 	for(uint32_t iClient=0 ; iClient<SOMAXCONN ; iClient++)
 	{
 		m_msgReportBit[iClient]					= l_msgReportBit;
 		m_msgReportWorkShop[iClient]			= l_msgReportWorkShop;
+		m_clientSocketStatus[iClient]			= 0;
+		m_clientJoinThreadsStatus[iClient] 		= 1;
 	}
+	m_allClientsJoinThreadsStatus 				= 1;
 }
 
 
 
 TCP::CTcpServer::~CTcpServer()
 {
-    // Close the server socket
-    	close(m_serverSocket);
+	uint32_t 	l_allClientsJoinThreadsStatus	= 0;
+	uint32_t 	l_sleepTimeUs 					= 1000000;	// 1 sec
+
+	if(m_serverSocketStatus != 0)
+	{
+		logDebug("Start the TCP server closing process");
+	    // Disable sends and receives and close the client socket
+		for(uint32_t iClient=0 ; iClient<SOMAXCONN ; iClient++)
+		{
+			if (m_clientSocketStatus[iClient] != 0)
+			{
+			    m_clientSocketStatus[iClient] = 0;
+				shutdown(m_clientSocket[iClient], SHUT_RDWR);
+			    close(m_clientSocket[iClient]);
+			}
+		}
+
+		// Disable sends and receives and close the server socket
+		shutdown(m_serverSocket, SHUT_RDWR);
+	    close(m_serverSocket);
+		m_serverSocketStatus = 0;
+
+		// Wait for threads to terminate
+		std::scoped_lock lock(m_mutexAllClientsJoinThreadsStatus);
+		{
+			l_allClientsJoinThreadsStatus = m_allClientsJoinThreadsStatus;
+		}
+		while(l_allClientsJoinThreadsStatus == 0)
+		{
+			std::scoped_lock lock(m_mutexAllClientsJoinThreadsStatus);
+			{
+				l_allClientsJoinThreadsStatus = m_allClientsJoinThreadsStatus;
+			}
+		}
+		usleep(l_sleepTimeUs);
+
+		logDebug("TCP server closed");
+	}
 }
 
 
 
 int TCP::CTcpServer::initTcpServer()
 {
-	// Create the TCP server socket
-		m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-		if(m_serverSocket == -1)
-		{
-			return -1;
-		}
+	int l_ret = -1;
 
-    // Assign an address and a port to the TCP server socket
+	// Create the TCP server socket
+	m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if(m_serverSocket != -1)
+	{
+		// Convert an IP address from textual to binary format
 		m_serverSocketAddr.sin_family	= AF_INET;
 		m_serverSocketAddr.sin_port 	= htons(m_serverSocketPort);
 		if(inet_pton(AF_INET, m_serverIpAddress.c_str(), &m_serverSocketAddr.sin_addr) != 1)
 		{
 			cerr << "> Can't convert the Internet address! Quitting" << endl;
-			return -1;
 		}
-
-		m_serverSocketAddrSize = sizeof(m_serverSocketAddr);
-		if(bind(m_serverSocket, (sockaddr*)&m_serverSocketAddr, m_serverSocketAddrSize) == -1)
+		else
 		{
-			return -1;
-		}
-
-    // Enable the TCP server socket to accept client connections
-		if(listen(m_serverSocket, SOMAXCONN) == -1)
-		{
-			return -1;
-		}
-
-	// Start the TCP server
-		srand((unsigned) time(0));
-		m_threadStart = thread(&TCP::CTcpServer::threadStartTcpServer, this);
-
-	return m_serverSocket;
-}
-
-
-
-void TCP::CTcpServer::closeTcpServer()
-{
-	// AHU : stop the threads : "m_threadPeriodicSendToClientMsgInfoKeepAlive", "m_threadPeriodicSendToClientMsgInfoPosition", "m_threadTreatClientMsg" and "m_threadCientConnexion"
-
-    // Disable sends and receives and close the client socket
-	for(uint32_t iClient=0 ; iClient<SOMAXCONN ; iClient++)
-	{
-		if(m_serverClientStatus[iClient] != 0)
-		{
-			shutdown(m_clientSocket[iClient], SHUT_RDWR);
-		    close(m_clientSocket[iClient]);
+			// Assign an address and a port to the TCP server socket
+			m_serverSocketAddrSize = sizeof(m_serverSocketAddr);
+			if(bind(m_serverSocket, (sockaddr*)&m_serverSocketAddr, m_serverSocketAddrSize) != -1)
+			{
+				// Enable the TCP server socket to accept client connections
+				if(listen(m_serverSocket, SOMAXCONN) != -1)
+				{
+					// Start the TCP server
+					l_ret = m_serverSocket;
+					srand((unsigned) time(0));
+					m_threadStart = thread(&TCP::CTcpServer::threadStartTcpServer, this);
+					m_threadStart.detach();
+				}
+			}
 		}
 	}
 
-	shutdown(m_serverSocket, SHUT_RDWR);
-    close(m_serverSocket);
+	return l_ret;
 }
 
 
 
 void TCP::CTcpServer::threadStartTcpServer()
 {
-	#if TCP_DEBUG
-	//cout << "> threadStartTcpServer (begin)" << endl;
-	#endif
+	logDebug("threadStartTcpServer (begin)");
 
     socklen_t 	l_clientSocketAddrSize;
 
-	if(m_serverSocket != -1)
+    // Accept any client connection
+	while((m_clientCounter < SOMAXCONN) && (m_serverSocket != -1))
 	{
-		while(m_serverClientCounter < SOMAXCONN)
+		// Wait for a client connection
+			l_clientSocketAddrSize				= sizeof(sockaddr_in);
+			m_clientSocket[m_clientCounter] 	= accept(m_serverSocket, (sockaddr*)&m_clientSocketAddr[m_clientCounter], &l_clientSocketAddrSize);
+
+		// Treat a client connection
+			if(m_clientSocket[m_clientCounter] != -1)
+			{
+				#if LOG_ON
+				cout << "> Client connected : socketValue = " << m_clientSocket[m_clientCounter] << endl;
+				#endif
+
+				// Translate the client socket address to a location and a service name
+					memset(m_clientName[m_clientCounter], 0, NI_MAXHOST);
+					memset(m_clientPort[m_clientCounter], 0, NI_MAXSERV);
+					if(getnameinfo((sockaddr*)&m_clientSocketAddr[m_clientCounter], sizeof(m_clientSocketAddr[m_clientCounter]), m_clientName[m_clientCounter], NI_MAXHOST, m_clientPort[m_clientCounter], NI_MAXSERV, 0) != 0)
+					{
+						inet_ntop(AF_INET, &m_clientSocketAddr[m_clientCounter].sin_addr, m_clientName[m_clientCounter], NI_MAXHOST);
+					}
+
+				// Create the client threads
+					// Launch the thread sending periodic information to the client
+						m_clientSocketStatus[m_clientCounter] 		= 1;
+						m_clientJoinThreadsStatus[m_clientCounter] 	= 0;
+						{
+							std::scoped_lock lock(m_mutexAllClientsJoinThreadsStatus);
+							m_allClientsJoinThreadsStatus 			= 0;
+						}
+
+						m_threadPeriodicSendToClientMsgInfoKeepAlive[m_clientCounter]	= thread(&TCP::CTcpServer::threadPeriodicSendToClientMsgInfoKeepAlive, 	this, m_clientCounter);
+						m_threadPeriodicSendToClientMsgInfoPosition[m_clientCounter] 	= thread(&TCP::CTcpServer::threadPeriodicSendToClientMsgInfoPosition, 	this, m_clientCounter);
+
+					// Launch the thread waiting for a client request
+						m_threadTreatClientMsg[m_clientCounter] = thread(&TCP::CTcpServer::threadTreatClientMsg, this, m_clientCounter);
+
+				// Update the client counter
+					m_clientCounter++;
+			}
+			else
+			{
+				logDebug("> Server socket is closed (disable any client connection)");
+
+				break;
+			}
+	}
+
+	// Join all thread
+	logDebug("Wait for all clients threads to join");
+	for(uint32_t iClient=0 ; iClient<SOMAXCONN ; iClient++)
+	{
+		if(m_clientJoinThreadsStatus[iClient] != 1)
 		{
-			// Wait for a client connection
-				l_clientSocketAddrSize					= sizeof(sockaddr_in);
-				m_clientSocket[m_serverClientCounter] 	= accept(m_serverSocket, (sockaddr*)&m_clientSocketAddr[m_serverClientCounter], &l_clientSocketAddrSize);
-
-			// Translate the client socket address to a location and a service name
-				memset(m_clientName[m_serverClientCounter], 0, NI_MAXHOST);
-				memset(m_clientPort[m_serverClientCounter], 0, NI_MAXSERV);
-				if(getnameinfo((sockaddr*)&m_clientSocketAddr[m_serverClientCounter], sizeof(m_clientSocketAddr[m_serverClientCounter]), m_clientName[m_serverClientCounter], NI_MAXHOST, m_clientPort[m_serverClientCounter], NI_MAXSERV, 0) != 0)
-				{
-					inet_ntop(AF_INET, &m_clientSocketAddr[m_serverClientCounter].sin_addr, m_clientName[m_serverClientCounter], NI_MAXHOST);
-				}
-
-			// Create the client threads
-				// Launch the thread sending periodic information to the client
-					m_serverClientStatus[m_serverClientCounter] 						= 1;
-					m_threadPeriodicSendToClientMsgInfoKeepAlive[m_serverClientCounter]	= thread(&TCP::CTcpServer::threadPeriodicSendToClientMsgInfoKeepAlive, 	this, m_serverClientCounter);
-					m_threadPeriodicSendToClientMsgInfoPosition[m_serverClientCounter] 	= thread(&TCP::CTcpServer::threadPeriodicSendToClientMsgInfoPosition, 	this, m_serverClientCounter);
-
-				// Launch the thread waiting for a client request
-					m_threadTreatClientMsg[m_serverClientCounter] = thread(&TCP::CTcpServer::threadTreatClientMsg, this, m_serverClientCounter);
-
-			// Update the client counter
-				m_serverClientCounter++;
+			#if LOG_ON
+			cout << "> Threads joigning for client " << iClient << endl;
+			#endif
+			m_threadPeriodicSendToClientMsgInfoKeepAlive[iClient].join();
+			m_threadPeriodicSendToClientMsgInfoPosition[iClient].join();
+			m_threadTreatClientMsg[iClient].join();
+			m_clientJoinThreadsStatus[m_clientCounter] = 1;
+			#if LOG_ON
+			cout << "> Thread joigned for client " << iClient << endl;
+			#endif
 		}
 	}
-	else
 	{
-		cerr << "> TCP server is not initialized! Quitting" << endl;
+		std::scoped_lock lock(m_mutexAllClientsJoinThreadsStatus);
+		m_allClientsJoinThreadsStatus = 1;
 	}
-
-	#if TCP_DEBUG
-	cout << "> threadStartTcpServer (end)" << endl;
-	#endif
+	logDebug("All clients threads joigned");
+	logDebug("threadStartTcpServer (end)");
 }
 
 
 
 void TCP::CTcpServer::threadPeriodicSendToClientMsgInfoKeepAlive(uint32_t p_clientId)
 {
-	#if TCP_DEBUG
-	//cout << "> threadPeriodicSendToClientMsgInfoKeepAlive (begin)" << endl;
-	#endif
+	logDebug("threadPeriodicSendToClientMsgInfoKeepAlive (begin)");
 
 	EIdMsg		l_periodicMsgId = ID_MSG_INFO_KEEP_ALIVE;
-	uint32_t 	l_sleepTimeUs 	= 5000000;					// 5 sec
+	uint32_t 	l_sleepTimeUs 	= 5000000;					// 2 sec
+	int32_t 	l_ret 			= 1;
 
 	// Send a periodic message to the client
-	while(m_serverClientStatus[p_clientId] == 1)
+	while((m_clientSocketStatus[p_clientId] == 1) && (l_ret == 1))
 	{
-		this->sendMsgToClient(l_periodicMsgId, p_clientId);
+		l_ret = this->sendMsgToClient(l_periodicMsgId, p_clientId);
 		usleep(l_sleepTimeUs);
 	}
 
-	#if TCP_DEBUG
-	cout << "> threadPeriodicSendToClientMsgInfoKeepAlive (end)" << endl;
-	#endif
+	logDebug("threadPeriodicSendToClientMsgInfoKeepAlive (end)");
 }
 
 
 
 void TCP::CTcpServer::threadPeriodicSendToClientMsgInfoPosition(uint32_t p_clientId)
 {
-	#if TCP_DEBUG
-	//cout << "> threadPeriodicSendToClientMsgInfoPosition (begin)" << endl;
-	#endif
+	logDebug("threadPeriodicSendToClientMsgInfoPosition (begin)");
 
 	EIdMsg		l_periodicMsgId = ID_MSG_INFO_POSITION;
-	uint32_t 	l_sleepTimeUs 	= 2000000;					// 2 sec
+	uint32_t 	l_sleepTimeUs 	= 2000000;					// 1 sec
+	int32_t 	l_ret 			= 1;
 
 	// Send a periodic message to the client
-	while(m_serverClientStatus[p_clientId] == 1)
+	while((m_clientSocketStatus[p_clientId] == 1) && (l_ret == 1))
 	{
-		this->sendMsgToClient(l_periodicMsgId, p_clientId);
+		l_ret = this->sendMsgToClient(l_periodicMsgId, p_clientId);
 		this->tmpUpdateMsgInfoPosition();					// AHU : mise a jour aleatoire temporaire (normalement mis a jour apres traitement d'image du mat sur le plan de jeu)
 		usleep(l_sleepTimeUs);
 	}
 
-	#if TCP_DEBUG
-	cout << "> threadPeriodicSendToClientMsgInfoPosition (end)" << endl;
-	#endif
+	logDebug("threadPeriodicSendToClientMsgInfoPosition (end)");
 }
 
 
 
 void TCP::CTcpServer::threadTreatClientMsg(uint32_t p_clientId)
 {
-	#if TCP_DEBUG
-	//cout << "> threadTreatClientMsg (begin)" << endl;
-	#endif
+	logDebug("threadTreatClientMsg (begin)");
 
 	SMsgHeader 	l_msgHeader;
 	int			l_readBytesSize;
 
-	while(m_serverClientStatus[p_clientId] == 1)
+	while(m_clientSocketStatus[p_clientId] == 1)
 	{
 		// Read the message header
 		l_readBytesSize = recv(m_clientSocket[p_clientId], &l_msgHeader, sizeof(SMsgHeader), 0);
@@ -255,21 +307,19 @@ void TCP::CTcpServer::threadTreatClientMsg(uint32_t p_clientId)
 			switch(l_msgHeader.id)
 			{
 				case ID_MSG_REPORT_BIT:
-					m_mutexMsgReportBit[p_clientId].lock();
-					l_readBytesSize = recv(m_clientSocket[p_clientId], &m_msgReportBit[p_clientId].body, sizeof(SMsgReportBitBody), 0);
-					#if TCP_DEBUG
-					displayMsgReportBit(&m_msgReportBit[p_clientId]);
-					#endif
-					m_mutexMsgReportBit[p_clientId].unlock();
+					{
+						std::scoped_lock lock(m_mutexMsgReportBit[p_clientId]);
+						l_readBytesSize = recv(m_clientSocket[p_clientId], &m_msgReportBit[p_clientId].body, sizeof(SMsgReportBitBody), 0);
+						displayMsgReportBit(&m_msgReportBit[p_clientId]);
+					}
 					break;
 
 				case ID_MSG_REPORT_WORKSHOP:
-					m_mutexMsgReportWorkShop[p_clientId].lock();
-					l_readBytesSize = recv(m_clientSocket[p_clientId], &m_msgReportWorkShop[p_clientId].body, sizeof(SMsgReportWorkShopBody), 0);
-					#if TCP_DEBUG
-					displayMsgReportWorkShop(&m_msgReportWorkShop[p_clientId]);
-					#endif
-					m_mutexMsgReportWorkShop[p_clientId].unlock();
+					{
+						std::scoped_lock lock(m_mutexMsgReportWorkShop[p_clientId]);
+						l_readBytesSize = recv(m_clientSocket[p_clientId], &m_msgReportWorkShop[p_clientId].body, sizeof(SMsgReportWorkShopBody), 0);
+						displayMsgReportWorkShop(&m_msgReportWorkShop[p_clientId]);
+					}
 					break;
 
 				default:
@@ -278,106 +328,101 @@ void TCP::CTcpServer::threadTreatClientMsg(uint32_t p_clientId)
 		}
 	}
 
-	#if TCP_DEBUG
-	cout << "> threadTreatClientMsg (end)" << endl;
-	#endif
+	logDebug("threadTreatClientMsg (end)");
 }
 
 
 
 int TCP::CTcpServer::sendMsgToClient(uint32_t p_msgId, uint32_t p_clientId)
 {
-	if(m_serverClientStatus[p_clientId] == 1)
+	if(m_clientSocketStatus[p_clientId] == 1)
 	{
 		switch(p_msgId)
 		{
 			case ID_MSG_INFO_KEEP_ALIVE:
-				m_mutexMsgInfoKeepAlive.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgInfoKeepAlive, sizeof(SMsgInfoKeepAlive), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgInfoKeepAlive);
+					if(send(m_clientSocket[p_clientId], &m_msgInfoKeepAlive, sizeof(SMsgInfoKeepAlive), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgInfoKeepAlive(&m_msgInfoKeepAlive);
 				}
-				#if TCP_DEBUG
-				displayMsgInfoKeepAlive(&m_msgInfoKeepAlive);
-				#endif
-				m_mutexMsgInfoKeepAlive.unlock();
 				break;
 
 			case ID_MSG_INFO_POSITION:
-				m_mutexMsgInfoPosition.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgInfoPosition, sizeof(SMsgInfoPosition), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgInfoPosition);
+					if(send(m_clientSocket[p_clientId], &m_msgInfoPosition, sizeof(SMsgInfoPosition), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgInfoPosition(&m_msgInfoPosition);
 				}
-				#if TCP_DEBUG
-				displayMsgInfoPosition(&m_msgInfoPosition);
-				#endif
-				m_mutexMsgInfoPosition.unlock();
 				break;
 
 			case ID_MSG_ORDER_BIT:
-				m_mutexMsgOrderBit.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgOrderBit, sizeof(SMsgOrderBit), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgOrderBit);
+					if(send(m_clientSocket[p_clientId], &m_msgOrderBit, sizeof(SMsgOrderBit), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgOrderBit(&m_msgOrderBit);
 				}
-				#if TCP_DEBUG
-				displayMsgOrderBit(&m_msgOrderBit);
-				#endif
-				m_mutexMsgOrderBit.unlock();
 				break;
 
 			case ID_MSG_ORDER_PATH:
-				m_mutexMsgOrderPath.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgOrderPath, sizeof(SMsgOrderPath), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgOrderPath);
+					if(send(m_clientSocket[p_clientId], &m_msgOrderPath, sizeof(SMsgOrderPath), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgOrderPath(&m_msgOrderPath);
 				}
-				#if TCP_DEBUG
-				displayMsgOrderPath(&m_msgOrderPath);
-				#endif
-				m_mutexMsgOrderPath.unlock();
 				break;
 
 			case ID_MSG_ORDER_PATH_CORR:
-				m_mutexMsgOrderPathCorr.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgOrderPathCorr, sizeof(SMsgOrderPathCorr), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgOrderPathCorr);
+					if(send(m_clientSocket[p_clientId], &m_msgOrderPathCorr, sizeof(SMsgOrderPathCorr), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgOrderPathCorr(&m_msgOrderPathCorr);
 				}
-				#if TCP_DEBUG
-				displayMsgOrderPathCorr(&m_msgOrderPathCorr);
-				#endif
-				m_mutexMsgOrderPathCorr.unlock();
 				break;
 
 			case ID_MSG_ORDER_WORKSHOP:
-				m_mutexMsgOrderWorkShop.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgOrderWorkShop, sizeof(SMsgOrderWorkShop), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgOrderWorkShop);
+					if(send(m_clientSocket[p_clientId], &m_msgOrderWorkShop, sizeof(SMsgOrderWorkShop), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgOrderWorkShop(&m_msgOrderWorkShop);
 				}
-				#if TCP_DEBUG
-				displayMsgOrderWorkShop(&m_msgOrderWorkShop);
-				#endif
-				m_mutexMsgOrderWorkShop.unlock();
 				break;
 
 			case ID_MSG_ORDER_STOP:
-				m_mutexMsgOrderStop.lock();
-				if(send(m_clientSocket[p_clientId], &m_msgOrderStop, sizeof(SMsgOrderStop), 0) == -1)
 				{
-					return -1;
+					std::scoped_lock lock(m_mutexMsgOrderStop);
+					if(send(m_clientSocket[p_clientId], &m_msgOrderStop, sizeof(SMsgOrderStop), 0) == -1)
+					{
+						return -1;
+					}
+					displayMsgOrderStop(&m_msgOrderStop);
 				}
-				#if TCP_DEBUG
-				displayMsgOrderStop(&m_msgOrderStop);
-				#endif
-				m_mutexMsgOrderStop.unlock();
 				break;
 
 			default:
 				break;
 		}
+	}
+	else
+	{
+		return -1;
 	}
 
 	return 1;
@@ -387,78 +432,71 @@ int TCP::CTcpServer::sendMsgToClient(uint32_t p_msgId, uint32_t p_clientId)
 
 void TCP::CTcpServer::updateMsg(uint32_t p_updateIdMsg, void* p_updateMsgBuffer)
 {
-	#if TCP_DEBUG
+	#if LOG_ON
 	cout << "> Update message : " << (EIdMsg) p_updateIdMsg << endl;
 	#endif
 
 	switch(p_updateIdMsg)
 	{
 		case ID_MSG_INFO_KEEP_ALIVE:
-			m_mutexMsgInfoKeepAlive.lock();
-			memcpy(&m_msgInfoKeepAlive.body, p_updateMsgBuffer, sizeof(SMsgInfoKeepAliveBody));
-			#if TCP_DEBUG
-			displayMsgInfoKeepAlive(&m_msgInfoKeepAlive);
-			#endif
-			m_mutexMsgInfoKeepAlive.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgInfoKeepAlive);
+				memcpy(&m_msgInfoKeepAlive.body, p_updateMsgBuffer, sizeof(SMsgInfoKeepAliveBody));
+				displayMsgInfoKeepAlive(&m_msgInfoKeepAlive);
+			}
 			break;
 
 		case ID_MSG_INFO_POSITION:
-			m_mutexMsgInfoPosition.lock();
-			memcpy(&m_msgInfoPosition.body, p_updateMsgBuffer, sizeof(SMsgInfoPositionBody));
-			#if TCP_DEBUG
-			displayMsgInfoPosition(&m_msgInfoPosition);
-			#endif
-			m_mutexMsgInfoPosition.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgInfoPosition);
+				memcpy(&m_msgInfoPosition.body, p_updateMsgBuffer, sizeof(SMsgInfoPositionBody));
+				displayMsgInfoPosition(&m_msgInfoPosition);
+			}
 			break;
 
 		/*
 		 * Message with no content to be updated
 		case ID_MSG_ORDER_BIT:
-			m_mutexMsgOrderBit.lock();
-			memcpy(&m_msgOrderBit.body, p_updateMsgBuffer, sizeof(SMsgOrderBit));
-			#if TCP_DEBUG
-			displayMsgOrderBit(&m_msgOrderBit);
-			#endif
-			m_mutexMsgOrderBit.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderBit);
+				memcpy(&m_msgOrderBit.body, p_updateMsgBuffer, sizeof(SMsgOrderBit));
+				displayMsgOrderBit(&m_msgOrderBit);
+			}
 			break;
 		*/
 
 		case ID_MSG_ORDER_PATH:
-			m_mutexMsgOrderPath.lock();
-			memcpy(&m_msgOrderPath.body, p_updateMsgBuffer, sizeof(SMsgOrderPathBody));
-			#if TCP_DEBUG
-			displayMsgOrderPath(&m_msgOrderPath);
-			#endif
-			m_mutexMsgOrderPath.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderPath);
+				memcpy(&m_msgOrderPath.body, p_updateMsgBuffer, sizeof(SMsgOrderPathBody));
+				displayMsgOrderPath(&m_msgOrderPath);
+			}
 			break;
 
 		case ID_MSG_ORDER_PATH_CORR:
-			m_mutexMsgOrderPathCorr.lock();
-			memcpy(&m_msgOrderPathCorr.body, p_updateMsgBuffer, sizeof(SMsgOrderPathCorrBody));
-			#if TCP_DEBUG
-			displayMsgOrderPathCorr(&m_msgOrderPathCorr);
-			#endif
-			m_mutexMsgOrderPathCorr.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderPathCorr);
+				memcpy(&m_msgOrderPathCorr.body, p_updateMsgBuffer, sizeof(SMsgOrderPathCorrBody));
+				displayMsgOrderPathCorr(&m_msgOrderPathCorr);
+			}
 			break;
 
 		case ID_MSG_ORDER_WORKSHOP:
-			m_mutexMsgOrderWorkShop.lock();
-			memcpy(&m_msgOrderWorkShop.body, p_updateMsgBuffer, sizeof(SMsgOrderWorkShopBody));
-			#if TCP_DEBUG
-			displayMsgOrderWorkShop(&m_msgOrderWorkShop);
-			#endif
-			m_mutexMsgOrderWorkShop.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderWorkShop);
+				memcpy(&m_msgOrderWorkShop.body, p_updateMsgBuffer, sizeof(SMsgOrderWorkShopBody));
+				displayMsgOrderWorkShop(&m_msgOrderWorkShop);
+			}
 			break;
 
 		/*
 		 * Message with no content to be updated
 		case ID_MSG_ORDER_STOP:
-			m_mutexMsgOrderStop.lock();
-			memcpy(&m_msgOrderStop.body, p_updateMsgBuffer, sizeof(SMsgOrderStopBody));
-			#if TCP_DEBUG
-			displayMsgOrderStop(&m_msgOrderStop);
-			#endif
-			m_mutexMsgOrderStop.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderStop);
+				memcpy(&m_msgOrderStop.body, p_updateMsgBuffer, sizeof(SMsgOrderStopBody));
+				displayMsgOrderStop(&m_msgOrderStop);
+			}
 			break;
 		*/
 
@@ -474,57 +512,66 @@ void TCP::CTcpServer::getMsg(uint32_t p_getMsgId, void* p_getMsgBuffer)
 	switch(p_getMsgId)
 	{
 		case ID_MSG_INFO_KEEP_ALIVE:
-			m_mutexMsgInfoKeepAlive.lock();
-			memcpy(p_getMsgBuffer, &m_msgInfoKeepAlive, sizeof(SMsgInfoKeepAlive));
-			m_mutexMsgInfoKeepAlive.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgInfoKeepAlive);
+				memcpy(p_getMsgBuffer, &m_msgInfoKeepAlive, sizeof(SMsgInfoKeepAlive));
+			}
 			break;
 
 		case ID_MSG_INFO_POSITION:
-			m_mutexMsgInfoPosition.lock();
-			memcpy(p_getMsgBuffer, &m_msgInfoPosition, sizeof(SMsgInfoPosition));
-			m_mutexMsgInfoPosition.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgInfoPosition);
+				memcpy(p_getMsgBuffer, &m_msgInfoPosition, sizeof(SMsgInfoPosition));
+			}
 			break;
 
 		case ID_MSG_ORDER_BIT:
-			m_mutexMsgOrderBit.lock();
-			memcpy(p_getMsgBuffer, &m_msgOrderBit, sizeof(SMsgOrderBit));
-			m_mutexMsgOrderBit.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderBit);
+				memcpy(p_getMsgBuffer, &m_msgOrderBit, sizeof(SMsgOrderBit));
+			}
 			break;
 
 		case ID_MSG_ORDER_PATH:
-			m_mutexMsgOrderPath.lock();
-			memcpy(p_getMsgBuffer, &m_msgOrderPath, sizeof(SMsgOrderPath));
-			m_mutexMsgOrderPath.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderPath);
+				memcpy(p_getMsgBuffer, &m_msgOrderPath, sizeof(SMsgOrderPath));
+			}
 			break;
 
 		case ID_MSG_ORDER_PATH_CORR:
-			m_mutexMsgOrderPathCorr.lock();
-			memcpy(p_getMsgBuffer, &m_msgOrderPathCorr, sizeof(SMsgOrderPathCorr));
-			m_mutexMsgOrderPathCorr.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderPathCorr);
+				memcpy(p_getMsgBuffer, &m_msgOrderPathCorr, sizeof(SMsgOrderPathCorr));
+			}
 			break;
 
 		case ID_MSG_ORDER_WORKSHOP:
-			m_mutexMsgOrderWorkShop.lock();
-			memcpy(p_getMsgBuffer, &m_msgOrderWorkShop, sizeof(SMsgOrderWorkShop));
-			m_mutexMsgOrderWorkShop.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderWorkShop);
+				memcpy(p_getMsgBuffer, &m_msgOrderWorkShop, sizeof(SMsgOrderWorkShop));
+			}
 			break;
 
 		case ID_MSG_ORDER_STOP:
-			m_mutexMsgOrderStop.lock();
-			memcpy(p_getMsgBuffer, &m_msgOrderStop, sizeof(SMsgOrderStop));
-			m_mutexMsgOrderStop.unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgOrderStop);
+				memcpy(p_getMsgBuffer, &m_msgOrderStop, sizeof(SMsgOrderStop));
+			}
 			break;
 
 		case ID_MSG_REPORT_WORKSHOP:
-			m_mutexMsgReportWorkShop[0].lock();
-			memcpy(p_getMsgBuffer, &m_msgReportWorkShop[0], sizeof(SMsgReportWorkShop));
-			m_mutexMsgReportWorkShop[0].unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgReportWorkShop[0]);
+				memcpy(p_getMsgBuffer, &m_msgReportWorkShop[0], sizeof(SMsgReportWorkShop));
+			}
 			break;
 
 		case ID_MSG_REPORT_BIT:
-			m_mutexMsgReportBit[0].lock();
-			memcpy(p_getMsgBuffer, &m_msgReportBit[0], sizeof(SMsgReportBit));
-			m_mutexMsgReportBit[0].unlock();
+			{
+				std::scoped_lock lock(m_mutexMsgReportBit[0]);
+				memcpy(p_getMsgBuffer, &m_msgReportBit[0], sizeof(SMsgReportBit));
+			}
 			break;
 
 		default:
@@ -547,9 +594,10 @@ void TCP::CTcpServer::tmpUpdateMsgInfoPosition()
 	int yRand 		= rand() % coordinatesRange + coordinatesMin;
 	int angleRand 	= rand() % angleRange + angleMin;
 
-	m_mutexMsgInfoPosition.lock();
-	m_msgInfoPosition.body.coordinates.x 	= xRand;
-	m_msgInfoPosition.body.coordinates.y 	= yRand;
-	m_msgInfoPosition.body.angle 			= angleRand;
-	m_mutexMsgInfoPosition.unlock();
+	{
+		std::scoped_lock lock(m_mutexMsgInfoPosition);
+		m_msgInfoPosition.body.coordinates.x 	= xRand;
+		m_msgInfoPosition.body.coordinates.y 	= yRand;
+		m_msgInfoPosition.body.angle 			= angleRand;
+	}
 }

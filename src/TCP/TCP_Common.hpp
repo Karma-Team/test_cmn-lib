@@ -2,12 +2,8 @@
  * "TCP_Common.hpp"
  **/
 
-
-
 #ifndef INC_TCPCOMMON_HPP_
 #define INC_TCPCOMMON_HPP_
-
-
 
 #include <iostream>
 #include <string>
@@ -24,20 +20,10 @@
 #include <pthread.h>
 #include <common.hpp>
 
-
-
 #define TCP_SERVER_IP_ADDRESS	"127.0.0.1"
 #define TCP_SERVER_PORT			54000
-#define TCP_DEBUG				1
 
-
-
-using namespace std;
-
-
-
-enum EIdMsg
-{
+enum EIdMsg {
 	// MAT vers ROBOT
 		// INFO
 		ID_MSG_INFO_KEEP_ALIVE	= 0x001,
@@ -56,174 +42,108 @@ enum EIdMsg
 		ID_MSG_REPORT_WORKSHOP	= 0x102
 };
 
-
-
-struct SMsgHeader
-{
+struct SMsgHeader {
 	uint32_t 				id;
 	uint32_t 				size;
 };
 
-
-
-struct SMsgInfoKeepAliveBody
-{
+struct SMsgInfoKeepAliveBody {
 	bool	 				isAlive;
 };
 
-
-
-struct SMsgInfoKeepAlive
-{
+struct SMsgInfoKeepAlive {
 	SMsgHeader 				hd;
 	SMsgInfoKeepAliveBody	body;
 };
 
-
-
-struct SMsgInfoPositionBody
-{
+struct SMsgInfoPositionBody {
 	SPoint					coordinates;
 	int16_t 				angle;
 };
 
-
-
-struct SMsgInfoPosition
-{
+struct SMsgInfoPosition {
 	SMsgHeader 				hd;
 	SMsgInfoPositionBody	body;
 };
 
-
-
-struct SMsgOrderBitBody
-{
+struct SMsgOrderBitBody {
 	uint32_t				tmp;
 };
 
-
-
-struct SMsgOrderBit
-{
+struct SMsgOrderBit {
 	SMsgHeader 				hd;
 	SMsgOrderBitBody		body;
 };
 
-
-
-struct SMsgOrderPathBody
-{
+struct SMsgOrderPathBody {
 	uint32_t				pointsNb;
 	SPoint					points[MAX_PATH_POINTS];
 };
 
-
-
-struct SMsgOrderPath
-{
+struct SMsgOrderPath {
 	SMsgHeader 				hd;
 	SMsgOrderPathBody		body;
 };
 
-
-
-struct SMsgOrderPathCorrBody
-{
+struct SMsgOrderPathCorrBody {
 	uint32_t				lastIdValid;
 	uint32_t				pointsNb;
 	SPoint					points[MAX_PATH_POINTS];
 };
 
-
-
-struct SMsgOrderPathCorr
-{
+struct SMsgOrderPathCorr {
 	SMsgHeader 				hd;
 	SMsgOrderPathCorrBody 	body;
 };
 
-
-
-struct SMsgOrderWorkShopBody
-{
+struct SMsgOrderWorkShopBody {
 	uint32_t 				tmp;
 };
 
-
-
-struct SMsgOrderWorkShop
-{
+struct SMsgOrderWorkShop {
 	SMsgHeader 				hd;
 	SMsgOrderWorkShopBody 	body;
 };
 
-
-
-struct SMsgOrderStopBody
-{
+struct SMsgOrderStopBody {
 	uint32_t 				tmp;
 };
 
-
-
-struct SMsgOrderStop
-{
+struct SMsgOrderStop {
 	SMsgHeader 				hd;
 	SMsgOrderStopBody 		body;
 };
 
-
-
-struct SMsgReportWorkShopBody
-{
+struct SMsgReportWorkShopBody {
 	uint32_t 				tmp;
 };
 
-
-
-struct SMsgReportWorkShop
-{
+struct SMsgReportWorkShop {
 	SMsgHeader 				hd;
 	SMsgReportWorkShopBody 	body;
 };
 
-
-
-struct SMsgReportBitBody
-{
+struct SMsgReportBitBody {
 	uint32_t 				tmp;
 };
 
-
-
-struct SMsgReportBit
-{
+struct SMsgReportBit {
 	SMsgHeader 				hd;
 	SMsgReportBitBody 		body;
 };
 
-
-
-struct SMsgErrorBody
-{
+struct SMsgErrorBody {
 	uint32_t 				tmp;
 };
 
-
-
-#if TCP_DEBUG
-void displayMsgInfoKeepAlive(SMsgInfoKeepAlive* p_msgInfoKeepAlive);
-void displayMsgInfoPosition(SMsgInfoPosition* p_msgInfoPosition);
-void displayMsgOrderBit(SMsgOrderBit* p_msgOrderBit);
-void displayMsgOrderPath(SMsgOrderPath* p_msgOrderPath);
-void displayMsgOrderPathCorr(SMsgOrderPathCorr* p_msgOrderPathCorr);
-void displayMsgOrderWorkShop(SMsgOrderWorkShop* p_msgOrderWorkShop);
-void displayMsgOrderStop(SMsgOrderStop* p_msgOrderStop);
-void displayMsgReportBit(SMsgReportBit* p_msgReportBit);
-void displayMsgReportWorkShop(SMsgReportWorkShop* p_msgReportWorkShop);
-#endif
-
-
+void displayMsgInfoKeepAlive( SMsgInfoKeepAlive* p_msgInfoKeepAlive );
+void displayMsgInfoPosition( SMsgInfoPosition* p_msgInfoPosition );
+void displayMsgOrderBit( SMsgOrderBit* p_msgOrderBit );
+void displayMsgOrderPath( SMsgOrderPath* p_msgOrderPath );
+void displayMsgOrderPathCorr( SMsgOrderPathCorr* p_msgOrderPathCorr );
+void displayMsgOrderWorkShop( SMsgOrderWorkShop* p_msgOrderWorkShop );
+void displayMsgOrderStop( SMsgOrderStop* p_msgOrderStop );
+void displayMsgReportBit( SMsgReportBit* p_msgReportBit );
+void displayMsgReportWorkShop( SMsgReportWorkShop* p_msgReportWorkShop );
 
 #endif /* INC_TCPCOMMON_HPP_ */

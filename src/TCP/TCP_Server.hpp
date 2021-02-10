@@ -36,7 +36,7 @@ namespace TCP
 				@param[in] p_serverSocketPort : TCP server port
 				@param[in] p_serverSocketIpAddr : TCP server IP address
 			 **/
-			CTcpServer(int p_serverSocketPort, string p_serverSocketIpAddr);
+			CTcpServer(int p_serverSocketPort, std::string p_serverSocketIpAddr);
 
 			/**
 				@brief destructor
@@ -48,11 +48,6 @@ namespace TCP
 				@return the TCP server socket
 			 **/
 			int initTcpServer();
-
-			/**
-				@brief method to close the TCP server
-			 **/
-			void closeTcpServer();
 
 			/**
 				@brief thread-method to start the TCP server socket and wait for clients connection
@@ -94,20 +89,20 @@ namespace TCP
 			void tmpUpdateMsgInfoPosition();
 
 		private:
-			thread				m_threadStart;												//< TCP server start thread for waiting clients connection
-			thread				m_threadCientConnexion[SOMAXCONN];							//< TCP server connexion thread
-			thread				m_threadTreatClientMsg[SOMAXCONN];							//< TCP server waiting thread
-			thread				m_threadPeriodicSendToClientMsgInfoKeepAlive[SOMAXCONN];	//< TCP server periodic thread
-			thread				m_threadPeriodicSendToClientMsgInfoPosition[SOMAXCONN];		//< TCP server periodic thread
-			mutex 				m_mutexMsgInfoKeepAlive;									//< TCP client mutex for info message : keep alive
-			mutex 				m_mutexMsgInfoPosition;										//< TCP client mutex for info message : position
-			mutex 				m_mutexMsgOrderBit;											//< TCP client mutex for order message : bit
-			mutex 				m_mutexMsgOrderPath;										//< TCP client mutex for order message : path
-			mutex 				m_mutexMsgOrderPathCorr;									//< TCP client mutex for order message : path correction
-			mutex 				m_mutexMsgOrderWorkShop;									//< TCP client mutex for order message : workshop
-			mutex 				m_mutexMsgOrderStop;										//< TCP client mutex for order message : stop
-			mutex 				m_mutexMsgReportWorkShop[SOMAXCONN];						//< TCP client mutex for report message : workshop
-			mutex 				m_mutexMsgReportBit[SOMAXCONN];								//< TCP client mutex for report message : bit
+			std::thread			m_threadStart;												//< TCP server start thread for waiting clients connection
+			std::thread			m_threadTreatClientMsg[SOMAXCONN];							//< TCP server waiting thread
+			std::thread			m_threadPeriodicSendToClientMsgInfoKeepAlive[SOMAXCONN];	//< TCP server periodic thread
+			std::thread			m_threadPeriodicSendToClientMsgInfoPosition[SOMAXCONN];		//< TCP server periodic thread
+			std::mutex 			m_mutexMsgInfoKeepAlive;									//< TCP client mutex for info message : keep alive
+			std::mutex 			m_mutexMsgInfoPosition;										//< TCP client mutex for info message : position
+			std::mutex 			m_mutexMsgOrderBit;											//< TCP client mutex for order message : bit
+			std::mutex 			m_mutexMsgOrderPath;										//< TCP client mutex for order message : path
+			std::mutex 			m_mutexMsgOrderPathCorr;									//< TCP client mutex for order message : path correction
+			std::mutex 			m_mutexMsgOrderWorkShop;									//< TCP client mutex for order message : workshop
+			std::mutex 			m_mutexMsgOrderStop;										//< TCP client mutex for order message : stop
+			std::mutex 			m_mutexMsgReportWorkShop[SOMAXCONN];						//< TCP client mutex for report message : workshop
+			std::mutex 			m_mutexMsgReportBit[SOMAXCONN];								//< TCP client mutex for report message : bit
+			std::mutex 			m_mutexAllClientsJoinThreadsStatus;							//< TCP client mutex for all clients join threads status
 			SMsgInfoKeepAlive 	m_msgInfoKeepAlive;											//< TCP client receive buffer for info message : keep alive
 			SMsgInfoPosition 	m_msgInfoPosition;											//< TCP client receive buffer for info message : position
 			SMsgOrderBit 		m_msgOrderBit;												//< TCP client receive buffer for order message : bit
@@ -120,9 +115,12 @@ namespace TCP
 			sockaddr_in 		m_serverSocketAddr;											//< TCP server socket address
 			sockaddr_in 		m_clientSocketAddr[SOMAXCONN];								//< TCP clients sockets address
 			socklen_t 			m_serverSocketAddrSize;										//< TCP client socket address size
-			string 				m_serverIpAddress;											//< TCP server IP address
-			uint32_t			m_serverClientCounter;										//< TCP server clientNb
-			uint32_t 			m_serverClientStatus[SOMAXCONN];							//< TCP server client status
+			std::string 		m_serverIpAddress;											//< TCP server IP address
+			uint32_t			m_clientCounter;											//< TCP server clientNb
+			uint32_t 			m_serverSocketStatus;										//< TCP server socket status
+			uint32_t 			m_clientSocketStatus[SOMAXCONN];							//< TCP server client socket status
+			uint32_t 			m_clientJoinThreadsStatus[SOMAXCONN];						//< TCP server client join threads status
+			uint32_t 			m_allClientsJoinThreadsStatus; 								//< TCP server all clients join threads status
 			int 				m_serverSocketPort;											//< TCP server socket port
 			int 				m_serverSocket;												//< TCP server socket
 			int 				m_clientSocket[SOMAXCONN];									//< TCP clients sockets

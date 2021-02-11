@@ -7,9 +7,6 @@
 using namespace std;
 
 TCP::CTcpClient::CTcpClient() {
-    m_serverIpAddress 							= TCP_SERVER_IP_ADDRESS;
-	m_clientSocket								= -1;
-    m_serverSocketPort							= TCP_SERVER_PORT;
 	SMsgInfoKeepAlive 		l_msgInfoKeepAlive	= {.hd={ID_MSG_INFO_KEEP_ALIVE,	sizeof( SMsgInfoKeepAlive )}, 	.body={false}};
 	SMsgInfoPosition 		l_msgInfoPosition 	= {.hd={ID_MSG_INFO_POSITION, 	sizeof( SMsgInfoPosition )}, 	.body={0, 0}};
 	SMsgOrderBit			l_msgOrderBit		= {.hd={ID_MSG_ORDER_BIT, 		sizeof( SMsgOrderBit )}, 		.body={0}};
@@ -19,6 +16,7 @@ TCP::CTcpClient::CTcpClient() {
 	SMsgOrderStop 			l_msgOrderStop		= {.hd={ID_MSG_ORDER_STOP,		sizeof( SMsgOrderStop )}, 		.body={0}};
 	SMsgReportBit 			l_msgReportBit		= {.hd={ID_MSG_REPORT_BIT, 		sizeof( SMsgReportBit )}, 		.body={0}};
 	SMsgReportWorkShop 		l_msgReportWorkShop	= {.hd={ID_MSG_REPORT_WORKSHOP, sizeof( SMsgReportWorkShop )},	.body={0}};
+
 	m_msgInfoKeepAlive 							= l_msgInfoKeepAlive;
 	m_msgInfoPosition 							= l_msgInfoPosition;
 	m_msgOrderBit 								= l_msgOrderBit;
@@ -28,13 +26,14 @@ TCP::CTcpClient::CTcpClient() {
 	m_msgOrderStop								= l_msgOrderStop;
 	m_msgReportBit								= l_msgReportBit;
 	m_msgReportWorkShop							= l_msgReportWorkShop;
+
+    m_serverIpAddress 							= TCP_SERVER_IP_ADDRESS;
+	m_clientSocket								= -1;
+    m_serverSocketPort							= TCP_SERVER_PORT;
 	m_isAliveServer								= false;
 }
 
 TCP::CTcpClient::CTcpClient( int p_serverSocketPort, string p_serverSocketIpAddr ) {
-	m_serverIpAddress							= p_serverSocketIpAddr;
-	m_clientSocket								= -1;
-	m_serverSocketPort							= p_serverSocketPort;
 	SMsgInfoKeepAlive 		l_msgInfoKeepAlive	= {.hd={ID_MSG_INFO_KEEP_ALIVE,	sizeof( SMsgInfoKeepAlive )}, 	.body={false}};
 	SMsgInfoPosition 		l_msgInfoPosition 	= {.hd={ID_MSG_INFO_POSITION, 	sizeof( SMsgInfoPosition )}, 	.body={0, 0}};
 	SMsgOrderBit			l_msgOrderBit		= {.hd={ID_MSG_ORDER_BIT, 		sizeof( SMsgOrderBit )}, 		.body={0}};
@@ -44,6 +43,7 @@ TCP::CTcpClient::CTcpClient( int p_serverSocketPort, string p_serverSocketIpAddr
 	SMsgOrderStop 			l_msgOrderStop		= {.hd={ID_MSG_ORDER_STOP,		sizeof( SMsgOrderStop )}, 		.body={0}};
 	SMsgReportBit 			l_msgReportBit		= {.hd={ID_MSG_REPORT_BIT, 		sizeof( SMsgReportBit )}, 		.body={0}};
 	SMsgReportWorkShop 		l_msgReportWorkShop	= {.hd={ID_MSG_REPORT_WORKSHOP, sizeof( SMsgReportWorkShop )},	.body={0}};
+
 	m_msgInfoKeepAlive 							= l_msgInfoKeepAlive;
 	m_msgInfoPosition 							= l_msgInfoPosition;
 	m_msgOrderBit 								= l_msgOrderBit;
@@ -53,6 +53,10 @@ TCP::CTcpClient::CTcpClient( int p_serverSocketPort, string p_serverSocketIpAddr
 	m_msgOrderStop								= l_msgOrderStop;
 	m_msgReportBit								= l_msgReportBit;
 	m_msgReportWorkShop							= l_msgReportWorkShop;
+
+	m_serverIpAddress							= p_serverSocketIpAddr;
+	m_clientSocket								= -1;
+	m_serverSocketPort							= p_serverSocketPort;
 	m_isAliveServer								= false;
 }
 
@@ -104,7 +108,7 @@ int TCP::CTcpClient::initTcpClient() {
 }
 
 void TCP::CTcpClient::threadReceiveMsgFromServer() {
-	logDebug( "Client connected to server : socketValue = " );
+	logDebug( "Client connected to server" );
 
 	SMsgHeader 	l_msgHeader;
 	int			l_clientSocket		= -1;
@@ -208,8 +212,8 @@ int TCP::CTcpClient::sendMsgToServer( uint32_t p_msgId ) {
 
 	{
 		std::scoped_lock lock( m_mutexClientSocket, m_mutexIsAliveServer );
-		l_clientSocket = m_clientSocket;
-		l_isAliveServer = m_isAliveServer;
+		l_clientSocket 	= m_clientSocket;
+		l_isAliveServer	= m_isAliveServer;
 	}
 
 	if( l_isAliveServer ) {

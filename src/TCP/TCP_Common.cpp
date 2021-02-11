@@ -2,17 +2,11 @@
  * "TCP_Common.cpp"
  **/
 
-
-
 #include "TCP_Common.hpp"
-
-
 
 using namespace std;
 
-
-
-void displayMsgInfoKeepAlive(SMsgInfoKeepAlive* p_msgInfoKeepAlive)
+void displayMsgInfoKeepAlive( SMsgInfoKeepAlive* p_msgInfoKeepAlive )
 {
 #if LOG_ON
 	cout << "> MSG_INFO_KEEP_ALIVE : ";
@@ -21,9 +15,7 @@ void displayMsgInfoKeepAlive(SMsgInfoKeepAlive* p_msgInfoKeepAlive)
 #endif
 }
 
-
-
-void displayMsgInfoPosition(SMsgInfoPosition* p_msgInfoPosition)
+void displayMsgInfoPosition( SMsgInfoPosition* p_msgInfoPosition )
 {
 #if LOG_ON
 	cout << "> MSG_INFO_POSITION : ";
@@ -32,9 +24,7 @@ void displayMsgInfoPosition(SMsgInfoPosition* p_msgInfoPosition)
 #endif
 }
 
-
-
-void displayMsgOrderBit(SMsgOrderBit* p_msgOrderBit)
+void displayMsgOrderBit( SMsgOrderBit* p_msgOrderBit )
 {
 #if LOG_ON
 	cout << "> MSG_ORDER_BIT : ";
@@ -43,15 +33,13 @@ void displayMsgOrderBit(SMsgOrderBit* p_msgOrderBit)
 #endif
 }
 
-
-
-void displayMsgOrderPath(SMsgOrderPath* p_msgOrderPath)
+void displayMsgOrderPath( SMsgOrderPath* p_msgOrderPath )
 {
 #if LOG_ON
 	cout << "> MSG_ORDER_PATH : ";
 	cout << "[[hd | id=" << p_msgOrderPath->hd.id << " ; size=" << p_msgOrderPath->hd.size << "][body | ";
 	cout << "pointsNb=" << p_msgOrderPath->body.pointsNb << " ; points=(";
-	for(uint32_t i = 0 ; i < p_msgOrderPath->body.pointsNb ; i++)
+	for( uint32_t i = 0 ; i < p_msgOrderPath->body.pointsNb ; i++ )
 	{
 		cout << "(x : " << p_msgOrderPath->body.points[i].x << " | ";
 		cout << "y : " 	<< p_msgOrderPath->body.points[i].y << ")";
@@ -60,15 +48,13 @@ void displayMsgOrderPath(SMsgOrderPath* p_msgOrderPath)
 #endif
 }
 
-
-
-void displayMsgOrderPathCorr(SMsgOrderPathCorr* p_msgOrderPathCorr)
+void displayMsgOrderPathCorr( SMsgOrderPathCorr* p_msgOrderPathCorr )
 {
 #if LOG_ON
 	cout << "> MSG_ORDER_PATH_CORR : ";
 	cout << "[[hd | id=" << p_msgOrderPathCorr->hd.id << " ; size=" << p_msgOrderPathCorr->hd.size << "][body | ";
 	cout << "lastIdValid=" << p_msgOrderPathCorr->body.lastIdValid << " ; pointsNb=" << p_msgOrderPathCorr->body.pointsNb << " ; points=(";
-	for(uint32_t i = 0 ; i < p_msgOrderPathCorr->body.pointsNb ; i++)
+	for( uint32_t i = 0 ; i < p_msgOrderPathCorr->body.pointsNb ; i++ )
 	{
 		cout << "(x : " << p_msgOrderPathCorr->body.points[i].x << " | ";
 		cout << "y : " 	<< p_msgOrderPathCorr->body.points[i].y << ")";
@@ -77,9 +63,7 @@ void displayMsgOrderPathCorr(SMsgOrderPathCorr* p_msgOrderPathCorr)
 #endif
 }
 
-
-
-void displayMsgOrderWorkShop(SMsgOrderWorkShop* p_msgOrderWorkShop)
+void displayMsgOrderWorkShop( SMsgOrderWorkShop* p_msgOrderWorkShop )
 {
 #if LOG_ON
 	cout << "> MSG_ORDER_WORKSHOP : ";
@@ -88,9 +72,7 @@ void displayMsgOrderWorkShop(SMsgOrderWorkShop* p_msgOrderWorkShop)
 #endif
 }
 
-
-
-void displayMsgOrderStop(SMsgOrderStop* p_msgOrderStop)
+void displayMsgOrderStop( SMsgOrderStop* p_msgOrderStop )
 {
 #if LOG_ON
 	cout << "> MSG_ORDER_STOP : ";
@@ -99,9 +81,7 @@ void displayMsgOrderStop(SMsgOrderStop* p_msgOrderStop)
 #endif
 }
 
-
-
-void displayMsgReportBit(SMsgReportBit* p_msgReportBit)
+void displayMsgReportBit( SMsgReportBit* p_msgReportBit )
 {
 #if LOG_ON
 	cout << "> MSG_REPORT_BIT : ";
@@ -110,9 +90,7 @@ void displayMsgReportBit(SMsgReportBit* p_msgReportBit)
 #endif
 }
 
-
-
-void displayMsgReportWorkShop(SMsgReportWorkShop* p_msgReportWorkShop)
+void displayMsgReportWorkShop( SMsgReportWorkShop* p_msgReportWorkShop )
 {
 #if LOG_ON
 	cout << "> MSG_REPORT_WORKSHOP : ";
